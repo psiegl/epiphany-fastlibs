@@ -472,6 +472,7 @@ static void init(void)
   }
 
   gettimeofday(&tend, NULL);
+  unsigned long int init_us = (tend.tv_sec * 1000000 + tend.tv_usec) - (tbgn.tv_sec * 1000000 + tbgn.tv_usec);
 
   eCoreMemMap_t* eCoreBgn = &ecfg.chip[0].eCoreRoot[0][0];
   eCoreMemMap_t* eCoreEnd = &ecfg.chip[0].eCoreRoot[ecfg.chip[0].xyDim-1][ecfg.chip[0].xyDim-1];
@@ -496,7 +497,7 @@ static void init(void)
          "                S\n"
          "           (connector)\n"
          "\n"
-         "Init in %ld μs\n"
+         "Init in ~%ld μs (~%ldt Inst.)\n"
          "\n",
          xlxZynqDevice(epiphanyfd),
          xlxZynqSiliconRevision(epiphanyfd),
@@ -513,8 +514,7 @@ static void init(void)
          ECORE_ADDR_ROWID((void*)emem->epi_base), ECORE_ADDR_COLID((void*)emem->epi_base),
          ECORE_ADDR_ROWID(eCoreEnd), ECORE_ADDR_COLID(eCoreEnd),
          ECORE_ADDR_ROWID((void*)(emem->epi_base+emem->size-1)), ECORE_ADDR_COLID((void*)(emem->epi_base+emem->size-1)),
-         ((tend.tv_sec * 1000000 + tend.tv_usec) - (tbgn.tv_sec * 1000000 + tbgn.tv_usec)));
-  fflush(stdout);
+         init_us, (init_us * 667 /* MHz -> Zynq frequency */)/1000 );
 }
 
 __attribute__((destructor))
