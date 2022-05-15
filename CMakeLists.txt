@@ -6,8 +6,7 @@ set(CMAKE_C_STANDARD 89)
 #set_target_properties(ehal PROPERTIES VERSION ${PROJECT_VERSION})
 #set_target_properties(ehal PROPERTIES PUBLIC_HEADER inc/elib.h)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc
-                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/state)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 add_library(ehal SHARED src/state/ident-adapteva-epiphany.c
                         src/state/ident-xilinx-zynq.c)
 
