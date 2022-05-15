@@ -100,7 +100,7 @@ typedef enum {
 })
 #endif
 
-int handle_hdf(char* fileBgn, char* fileEnd, void* pass)
+int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
 {
   assert(fileBgn);
   assert(fileEnd);
@@ -113,12 +113,12 @@ int handle_hdf(char* fileBgn, char* fileEnd, void* pass)
   cfg->emem[0].prot = PROT_NONE;
 
   int eCores = 0, gen = 0, version = 0;
-  char platform_version[20] = { '\0' };
-  char emem[10] = { '\0' };
+  unsigned char platform_version[20] = { '\0' };
+  unsigned char emem[10] = { '\0' };
 
-  char *c = fileBgn;
+  unsigned char *c = fileBgn;
 #ifdef NORDX
-  char key[100];
+  unsigned char key[100];
 #endif
 //  char value[100];
   while(c < fileEnd) {

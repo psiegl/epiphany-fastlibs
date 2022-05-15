@@ -13,7 +13,7 @@
 #include "ehal-print.h"
 
 int load_file(const char *fname, unsigned extc, const char** ext,
-              int (*fnc)(char* fileBgn, char* fileEnd, void *pass),
+              int (*fnc)(unsigned char* fileBgn, unsigned char* fileEnd, void *pass),
               void *pass)
 {
   assert(ext);
@@ -48,7 +48,7 @@ int load_file(const char *fname, unsigned extc, const char** ext,
       
       // TODO: check if file is too huge to read at one shot ...
       
-      char *mappedFile;
+      unsigned char *mappedFile;
       if( (mappedFile = mmap(0, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0)) != MAP_FAILED ) {
         if( madvise(mappedFile, size, MADV_SEQUENTIAL | MADV_WILLNEED) )
           eCoresWarn("Could not madvise %s, %s\n", fname, strerror(errno));

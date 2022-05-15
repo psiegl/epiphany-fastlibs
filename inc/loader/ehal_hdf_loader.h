@@ -9,4 +9,3 @@
 int load_default_hdf(eConfig_t *cfg);
 
 #endif /* __EHAL_HDF_LOADER__H */
- 

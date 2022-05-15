@@ -5,7 +5,7 @@
 #define __EHAL_GENERIC_FILE_LOADER__H
 
 int load_file(const char *fname, unsigned extc, const char** ext,
-              int (*fnc)(char* fileBgn, char* fileEnd, void *pass),
+              int (*fnc)(unsigned char* fileBgn, unsigned char* fileEnd, void *pass),
               void *pass);
 
 #endif /* __EHAL_GENERIC_FILE_LOADER__H */
