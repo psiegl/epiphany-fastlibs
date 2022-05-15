@@ -8,8 +8,8 @@
 #include <string.h>
 #include <sys/mman.h> // PROT_NONE, PROT_READ, PROT_WRITE
 #include "memmap-epiphany-cores.h"
-#include "state/ehal_generic_file_loader.h"
-#include "state/ehal_hdf_loader.h"
+#include "loader/ehal_generic_file_loader.h"
+#include "loader/ehal_hdf_loader.h"
 #include "ehal-print.h"
 
 #define elemsof( x ) (sizeof(x)/sizeof(x[0]))
