@@ -7,7 +7,6 @@
 #include "memmap-epiphany-system.h"
 #include "state/ehal-state.h"
 
-static char* parallellaVersionToString(eSysRegs* esysregs);
 eChip_t eChipType(eSysRegs* esysregs);
 const char* eChipTypeToStr(eSysRegs* esysregs);
 const char* eChipCapsToStr(eSysRegs* esysregs);
