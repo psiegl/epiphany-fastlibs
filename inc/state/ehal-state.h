@@ -43,7 +43,7 @@ typedef enum
 typedef struct                      // default values:
 {                                   // ----------------
                                     // PLATFORM_VERSION   PARALLELLA1601
-  eFpgaMemMapRegs esys_regs_base;   //*                       0x808f0f00  -> 0x808f0000
+  eSysRegs* esys_regs_base;         //*                       0x808f0f00  -> 0x808f0000
 
   unsigned num_chips;               //                                 1
   struct {
