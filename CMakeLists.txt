@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 2.0)
+cmake_minimum_required(VERSION 2.8)
 project( ehal )
-#project(ehal VERSION 0.1.0 DESCRIPTION "Adapteva EPIPHANY efficient HAL")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Adapteva EPIPHANY efficient HAL")
+set(CPACK_PACKAGE_VERSION 0.1.0)
 set(CMAKE_C_STANDARD 89)
 
 #set_target_properties(ehal PROPERTIES VERSION ${PROJECT_VERSION})
@@ -8,7 +9,8 @@ set(CMAKE_C_STANDARD 89)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 add_library(ehal SHARED src/state/ident-adapteva-epiphany.c
-                        src/state/ident-xilinx-zynq.c)
+                        src/state/ident-xilinx-zynq.c
+                        src/state/ehal_generic_file_loader.c)
 
 install(TARGETS ehal DESTINATION /usr/lib)
 #install(FILES inc/ehal.h DESTINATION include)
