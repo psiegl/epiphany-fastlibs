@@ -11,6 +11,7 @@ add_library(ehal SHARED
 	src/loader/ehal_generic_file_loader.c
 	src/loader/ehal_hdf_loader.c
 	src/loader/ehal_srec_loader.c
+	src/ehal.c
 )
 
 set_target_properties(ehal PROPERTIES

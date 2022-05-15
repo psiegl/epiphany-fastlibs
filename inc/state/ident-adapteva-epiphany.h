@@ -9,5 +9,8 @@
 
 static char* parallellaVersionToString(eSysRegs* esysregs);
 eChip_t eChipType(eSysRegs* esysregs);
+const char* eChipTypeToStr(eSysRegs* esysregs);
+const char* eChipCapsToStr(eSysRegs* esysregs);
+unsigned eChipRevision(eSysRegs* esysregs);
 
 #endif /* __IDENT_ADAPTEVA_EPIPHANY__H */

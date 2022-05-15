@@ -56,3 +56,47 @@ eChip_t eChipType(eSysRegs* esysregs)
     return E__UNKNOWN;
   }
 }
+
+const char* eChipTypeToStr(eSysRegs* esysregs)
+{
+  assert(esysregs);
+
+  switch(esysregs->esysinfo.platform) {
+    eCoresError("Could not identify epiphany! 'unknown'\n");
+    return "undefined";
+  case 1:
+    return "parallella-1.x,e16,7z020,gpio";
+  case 2:
+    return "parallella-1.x,e16,7z020,no-gpio";
+  case 3:
+    return "parallella-1.x,e16,7z010,gpio";
+  case 4:
+    return "parallella-1.x,e16,7z010,no-gpio";
+  case 5: 
+    return "parallella-1.x,e64,7x020,gpio";
+  default:
+    eCoresError("Could not identify epiphany at all! %d\n", esysregs->esysinfo.platform);
+    return "unknown";
+  }
+}
+
+const char* eChipCapsToStr(eSysRegs* esysregs)
+{
+  assert(esysregs);
+
+  switch(esysregs->esysinfo.fpga_load_type) {
+  case 1:
+    return "hdmi, gpio unused";
+  case 2:
+    return "headless, gpio unused";
+  default:
+    return "undefined";
+  }
+}
+
+unsigned eChipRevision(eSysRegs* esysregs)
+{
+  assert(esysregs);
+
+  return esysregs->esysinfo.revision;
+}
