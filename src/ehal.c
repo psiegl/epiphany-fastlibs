@@ -277,7 +277,7 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
 
     // as the FPGA regs are now visible, we can check what configuration is given.
     // let us rather trust FPGA then HDF file
-    eChip_t hw_eChipType = eChipVersion(esysregs);
+    eChip_t hw_eChipType = eChipType(esysregs);
     if(chip->type != hw_eChipType) {
       eCoresWarn("Hw highlighted different type of EPIPHANY! Will use hw!\n");
       chip->type  = hw_eChipType;
