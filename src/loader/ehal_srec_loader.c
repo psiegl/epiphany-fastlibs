@@ -451,7 +451,7 @@ int parse_srec(unsigned char *srecBgn, unsigned char *srecEnd,
 }
 
 // public API
-int load_srec(char *srec, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
+int load_srec(const char *srecFile, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
 {
   const char *ext[] = {
     "srec", "sx", "mot", "mxt", "exo",
@@ -462,6 +462,6 @@ int load_srec(char *srec, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
     .eCoreBgn = eCoreBgn,
     .eCoreEnd = eCoreEnd
   };
-  return load_file(srec, elemsof(ext), ext, handle_srec, &data);
+  return load_file(srecFile, elemsof(ext), ext, handle_srec, &data);
 }
 
