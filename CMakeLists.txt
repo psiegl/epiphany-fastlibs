@@ -4,11 +4,6 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Adapteva EPIPHANY efficient HAL")
 set(CPACK_PACKAGE_VERSION 0.1.0)
 set(CMAKE_C_STANDARD 90)
 
-# In case 64bit host, however library internally employs solely 32bit addresses
-if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
-	set (CMAKE_C_FLAGS "-m32")
-endif()
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 add_library(ehal SHARED
 	src/state/ident-adapteva-epiphany.c
