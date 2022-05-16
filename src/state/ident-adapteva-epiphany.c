@@ -35,6 +35,7 @@ const char* eChipTypeToStr(eSysRegs* esysregs)
   assert(esysregs);
 
   switch(esysregs->esysinfo.platform) {
+  case 0:
     eCoresError("Could not identify epiphany! 'unknown'\n");
     return "undefined";
   case 1:
