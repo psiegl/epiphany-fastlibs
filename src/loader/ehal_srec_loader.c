@@ -28,19 +28,19 @@
   case 'A': case 'B':                              \
   case 'C': case 'D':                              \
   case 'E': case 'F':                              \
-    ret = (ret << 4) | (uint32_t)(c - '7');        \
+    ret = (ret << 4) | (uintptr_t)(c - '7');       \
     break;                                         \
   case 'a': case 'b':                              \
   case 'c': case 'd':                              \
   case 'e': case 'f':                              \
-    ret = (ret << 4) | (uint32_t)(c - 'W');        \
+    ret = (ret << 4) | (uintptr_t)(c - 'W');       \
     break;                                         \
   case '0': case '1':                              \
   case '2': case '3':                              \
   case '4': case '5':                              \
   case '6': case '7':                              \
   case '8': case '9':                              \
-    ret = (ret << 4) | (uint32_t)(c - '0');        \
+    ret = (ret << 4) | (uintptr_t)(c - '0');       \
     break;                                         \
   default:                                         \
     eCoresError("not a hex: '%c'\n", c );          \
@@ -49,7 +49,7 @@
 
 // Address bytes are used as a group
 // (input is formated into big endian)
-int srecGroupToBytes(uint32_t* bytesOut,
+int srecGroupToBytes(uintptr_t* bytesOut,
                      unsigned char *srecPairCharIn, unsigned srecBytes,
                      unsigned char *chksum)
 {
@@ -58,7 +58,7 @@ int srecGroupToBytes(uint32_t* bytesOut,
   assert(chksum);
 
   unsigned i;
-  uint32_t ret = 0;
+  uintptr_t ret = 0;
   for(i = 0; i < srecBytes; ++i) {
     unsigned char c = srecPairCharIn[i];
     SWITCH_HEX( c, ret ); // contains return -1!
@@ -298,7 +298,7 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
         srecBgn = srecData + data__srecBytes;
 
         // ----------- retrieve data
-        uint32_t addr;
+        uintptr_t addr;
         if(srecGroupToBytes(&addr, srecAddr, addr__srecBytes, &chksum)) {
           eCoresError("hex of 'addr' wrong\n"); 
           return -1;
@@ -353,7 +353,7 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
 
 
         // ----------- retrieve data
-        uint32_t addr;
+        uintptr_t addr;
         if(srecGroupToBytes(&addr, srecAddr, addr__srecBytes, &chksum)) {
           eCoresError("hex of 'addr' wrong\n"); 
           return -1;
@@ -379,7 +379,7 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
 
 
         // ----------- retrieve data
-        uint32_t parsedRecCount;
+        uintptr_t parsedRecCount;
         if(srecGroupToBytes(&parsedRecCount, srecBgn, data__srecBytes, &chksum)) {
           eCoresError("hex of 'count of prev. records' wrong\n"); 
           return -1;
