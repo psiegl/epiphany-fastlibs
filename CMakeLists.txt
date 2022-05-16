@@ -24,3 +24,14 @@ install(TARGETS ehal
 	PUBLIC_HEADER DESTINATION /usr/include
 )
 #install(FILES inc/ehal.h DESTINATION include)
+
+
+
+include(CTest)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
+link_directories(${CMAKE_BINARY_DIR}/)
+add_executable(naiiv.elf tests/naiiv/main.c)
+target_link_libraries(naiiv.elf PRIVATE libehal.so)
+add_test(NAME naiiv
+	COMMAND sudo ELOGLEVEL=5 EPIPHANY_HDF=${CMAKE_CURRENT_SOURCE_DIR}/misc/platform.hdf ${CMAKE_BINARY_DIR}/naiiv.elf)
