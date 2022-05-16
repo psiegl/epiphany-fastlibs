@@ -250,7 +250,7 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
   //       hardware values will take precidice.
   //       TODO: Next step could be to execute code on cores to evaluate next HDF values.
   eConfig_t ecfgHdf;
-  if(load_default_hdf(&ecfgHdf) == -1) {
+  if(load_default_hdf(&ecfgHdf)) {
     eCoresError("Failed to obtain HDF file! Aborting...\n");
     return -1;
   }
@@ -279,7 +279,7 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
     // let us rather trust FPGA then HDF file
     eChip_t hw_eChipType = eChipType(esysregs);
     if(chip->type != hw_eChipType) {
-      eCoresWarn("Hw highlighted different type of EPIPHANY! Will use hw!\n");
+      eCoresWarn("HW identification different then HDF! Will use HW!\n");
       chip->type  = hw_eChipType;
       chip->xyDim = ECHIP_GET_DIM(hw_eChipType);
     }
@@ -293,7 +293,7 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
 
       // after the mmap'ed regions are up, let us enable the east elink:
       eLinkUp(&esysregs->esysconfig.reg, chip->eCoreRoot, chip->type); // FIXME
-      eCoresPrintf(E_DBG, "Enabled EAST eLink between Zynq and EPIPHANY\n");
+      eCoresPrintf(E_DBG, "Zynq <-> EPIPHANY: Enabled EAST eLink\n");
 
       typeof(&ecfg->emem[0]) emem = &ecfg->emem[0];
 // https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
@@ -307,8 +307,18 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
       void* eshm = mmap(emem->epi_base, emem->size, emem->prot, flags, eCoresFd, emem->base_address);
       assert(eshm == emem->epi_base);
       if(eshm != MAP_FAILED) {
+// In case MAP_HUGETLB is not defined, let us try the 2nd option:
+// Quote:      "It is mostly intended for
+//              embedded systems, where MADV_HUGEPAGE-style behavior may
+//              not be enabled by default in the kernel."
+// https://man7.org/linux/man-pages/man2/madvise.2.html
+// Do not care about return value, as it is just hint to Linux
+#if ! (defined(MAP_HUGETLB) && defined(MAP_HUGE_2MB)) && defined(MADV_HUGEPAGE)
+        int madvHugepage = madvise(eshm, emem->size, MADV_HUGEPAGE);
+        eCoresPrintf(E_DBG, "Zynq <-> eCores shm: madvise(HUGEPAGE): %d\n", madvHugepage );
+#endif
         
-        eCorePrintf(E_DBG, eshm, "VA %p, PA %p (%s) - eCores-Zynq shm\n", emem->epi_base, (void*)emem->base_address, fmtBytes(emem->size) );
+        eCorePrintf(E_DBG, eshm, "VA %p, PA %p (%s) - Zynq <-> eCores shm\n", eshm, (void*)emem->base_address, fmtBytes(emem->size) );
         return 0;
 
         //munmap(eshm, emem->size);
@@ -463,10 +473,8 @@ static void init(void)
   char *eloglevels = getenv ("ELOGLEVEL");
   eloglevel = (eloglevels == NULL) ? 0 : atoi(eloglevels);
 
-  if((epiphanyfd = eOpen()) == -1)
-    exit(-1);
-
-  if(eCoresBootstrap(epiphanyfd, &ecfg)) {
+  if((epiphanyfd = eOpen()) == -1
+     || eCoresBootstrap(epiphanyfd, &ecfg)) {
     eCoresError("Failed to initialise EPIPHANY! Aborting...\n");
     exit(-1);
   }
