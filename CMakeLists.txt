@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 project( ehal )
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Adapteva EPIPHANY efficient HAL")
 set(CPACK_PACKAGE_VERSION 0.1.0)
-set(CMAKE_C_STANDARD 89)
+set(CMAKE_C_STANDARD 90)
+
+set (CMAKE_C_FLAGS "-m32")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 add_library(ehal SHARED
