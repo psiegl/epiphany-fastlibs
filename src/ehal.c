@@ -315,7 +315,11 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
 // Do not care about return value, as it is just hint to Linux
 #if ! (defined(MAP_HUGETLB) && defined(MAP_HUGE_2MB)) && defined(MADV_HUGEPAGE)
         int madvHugepage = madvise(eshm, emem->size, MADV_HUGEPAGE);
-        eCoresPrintf(E_DBG, "Zynq <-> eCores shm: madvise(HUGEPAGE): %d\n", madvHugepage );
+        eCoresPrintf(E_DBG, "Zynq <-> eCores shm: madvise(MADV_HUGEPAGE): %d%s%s%s\n",
+                     madvHugepage,
+                     madvHugepage ? " (" : "",
+                     madvHugepage ? strerror(errno) : "",
+                     madvHugepage ? ")" : "" );
 #endif
         
         eCorePrintf(E_DBG, eshm, "VA %p, PA %p (%s) - Zynq <-> eCores shm\n", eshm, (void*)emem->base_address, fmtBytes(emem->size) );
