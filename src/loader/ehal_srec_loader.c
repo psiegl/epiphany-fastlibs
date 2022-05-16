@@ -92,27 +92,6 @@ int srecPairsToBytes(unsigned char* bytesOut,
   return 0;
 }
 
-
-
-/*
-
-- function commented:
-SREC header: e_seismic.srec
-SREC loaded for [32, 8] to [35,11] in 2248 μs (parsed in 1751 μs)
-
-- writing to device commented:
-SREC header: e_seismic.srec
-SREC loaded for [32, 8] to [35,11] in 2618 μs (parsed in 2083 μs)
-
-
-
-- full function given:
-SREC header: e_seismic.srec
-SREC loaded for [32, 8] to [35,11] in 235212 μs (parsed in 234642 μs)
-
-
-*/
-
 // Count, Data and Checksum bytes are used from pairs
 // (input is formated into host endianness likel little endian)
 int srecPairsToBytes_eCoreLocal(unsigned char* addr,
@@ -154,22 +133,22 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
 */
     uint32_t r, c;
 #if 0
-    for(r = (((uint32_t)eCoreBgn) & MASK_ROWID);
-        r <= (((uint32_t)eCoreEnd) & MASK_ROWID); r += INCR_ROWID) {
-      for(c = (((uint32_t)eCoreBgn) & MASK_COLID);
-          c <= (((uint32_t)eCoreEnd) & MASK_COLID); c += INCR_COLID) {
-        uint32_t eAddr = r | c | (uint32_t)&addr[i];
+    for(r = (((uintptr_t)eCoreBgn) & MASK_ROWID);
+        r <= (((uintptr_t)eCoreEnd) & MASK_ROWID); r += INCR_ROWID) {
+      for(c = (((uintptr_t)eCoreBgn) & MASK_COLID);
+          c <= (((uintptr_t)eCoreEnd) & MASK_COLID); c += INCR_COLID) {
+        uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
         //printf("[%2d,%2d] eAddr: %08x  %p\n", ECORE_ADDR_ROWID( eAddr ), ECORE_ADDR_COLID( eAddr ), eAddr, &((char*)addr)[i]);
         *(unsigned char*)eAddr = ret;
       }
     }
 #else
-   // in theory it could be faster to first fill the far eCores
-    for(r = (((uint32_t)eCoreEnd) & MASK_ROWID);
-        r >= (((uint32_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
-      for(c = (((uint32_t)eCoreEnd) & MASK_COLID);
-          c >= (((uint32_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
-        uint32_t eAddr = r | c | (uint32_t)&addr[i];
+    // in theory it could be faster to first fill the far eCores
+    for(r = (((uintptr_t)eCoreEnd) & MASK_ROWID);
+        r >= (((uintptr_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
+      for(c = (((uintptr_t)eCoreEnd) & MASK_COLID);
+          c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
+        uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
         //printf("[%2d,%2d] eAddr: %08x (%p, %d) write %x\n", ECORE_ADDR_ROWID( eAddr ), ECORE_ADDR_COLID( eAddr ), eAddr, &((char*)addr)[i], i, ret);
         *(unsigned char*)eAddr = ret;
       }
@@ -184,23 +163,23 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
   uint32_t MASK_COLID = 0x03F00000;
   uint32_t INCR_COLID = 0x00100000;
   uint32_t r, c;
-  for(r = (((uint32_t)eCoreEnd) & MASK_ROWID);
-      r >= (((uint32_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
-    for(c = (((uint32_t)eCoreEnd) & MASK_COLID);
-        c >= (((uint32_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
+  for(r = (((uintptr_t)eCoreEnd) & MASK_ROWID);
+      r >= (((uintptr_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
+    for(c = (((uintptr_t)eCoreEnd) & MASK_COLID);
+        c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
 
-      if(!((uint32_t)addr % sizeof(uint32_t))
+      if(!((uintptr_t)addr % sizeof(uint32_t)) // EPIPHANY reads 32bit
 /*         && !(srecPairs % sizeof(uint32_t)) */) {
-        uint32_t eAddr = r | c | (uint32_t)addr;
+        uintptr_t eAddr = r | c | (uintptr_t)addr;
         memcpy((char*)eAddr, t, srecPairs);
       }
       else {
 //        printf("!! %p %d\n", addr, srecPairs);
         for(i = 0; i < srecPairs; ++i) {
-          uint32_t eAddr = r | c | (uint32_t)&addr[i];
-          if(! (((uint32_t)&addr[i]) % sizeof(uint32_t))) {
+          uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
+          if(! (((uintptr_t)&addr[i]) % sizeof(uint32_t))) { // EPIPHANY reads 32bit
 //            printf("%p %p %d\n", &addr[i], &t[i], srecPairs - i );
-            memcpy((uint32_t*)eAddr, &t[i], srecPairs - i);
+            memcpy((uintptr_t*)eAddr, &t[i], srecPairs - i);
             break;
           }
           *(unsigned char*)eAddr = t[i];
