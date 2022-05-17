@@ -180,32 +180,6 @@ void eCoresReset(void)
 #endif
 
 
-int eOpen(void)
-{
-  eCoresPrintf(E_DBG, "Opening EPIPHANY.\n" );
-  struct { int err; const char* dev; } edev[] = {
-    { -1, "/dev/epiphany/mesh0" },
-    { -1, "/dev/epiphany" },
-    { -1, "/dev/mem" }
-  };
-
-  int eCoresFd = -1;
-  unsigned i, edevc = elemsof(edev);
-  for(i=0; i<edevc; ++i) {
-    if((eCoresFd = open(edev[i].dev, O_RDWR|O_SYNC|O_EXCL)) != -1) // TODO: check if file ...
-      break;
-    edev[i].err = errno;
-  }
-  if(eCoresFd == -1) {
-    eCoresError("Could not open EPIPHANY!, tried:\n");
-    for(i=0; i<edevc; ++i)
-      eCoresError("    '%s' (%s)\n", edev[i].dev, strerror(edev[i].err));
-    eCoresError("Cleaning up...\n");
-    return -1;
-  }
-  return eCoresFd;
-}
-
 int eCoresBootstrap(eConfig_t *ecfg)
 {
   // Idea: We need to read the HDF to get initial values:
@@ -224,6 +198,27 @@ int eCoresBootstrap(eConfig_t *ecfg)
 //    eCoresError("Supplied HDF is different to default cfg! Aborting...\n");
 //    return -1;
 //  }
+
+  eCoresPrintf(E_DBG, "Opening EPIPHANY.\n" );
+  struct { int err; const char* dev; } edev[] = {
+    { -1, "/dev/epiphany/mesh0" },
+    { -1, "/dev/epiphany" },
+    { -1, "/dev/mem" }
+  };
+
+  unsigned i, edevc = elemsof(edev);
+  for(i=0; i<edevc; ++i) {
+    if((ecfg->fd = open(edev[i].dev, O_RDWR|O_SYNC|O_EXCL)) != -1) // TODO: check if file ...
+      break;
+    edev[i].err = errno;
+  }
+  if(ecfg->fd == -1) {
+    eCoresError("Could not open EPIPHANY!, tried:\n");
+    for(i=0; i<edevc; ++i)
+      eCoresError("    '%s' (%s)\n", edev[i].dev, strerror(edev[i].err));
+    eCoresError("Cleaning up...\n");
+    return -1;
+  }
 
   eCoresPrintf(E_DBG, "Setting up Zynq FPGA regs / shm to EPIPHANY eCores\n" );
   // Can not use MAP_FIXED_NOREPLACE as it would 'normally' overlap with eCore mmap
@@ -291,7 +286,7 @@ int eCoresBootstrap(eConfig_t *ecfg)
         eCorePrintf(E_DBG, eshm, "VA %p, PA %p (%s) - Zynq <-> eCores shm\n", eshm, (void*)emem->base_address, fmtBytes(emem->size) );
         return 0;
 
-        //munmap(eshm, emem->size);
+        //munmap(emem->epi_base, emem->size);
       }
       else
         eCoresError("failed on mmap eshm %p (errno %d, %s)! Cleaning up...\n", eshm, errno, strerror(errno));
@@ -301,26 +296,29 @@ int eCoresBootstrap(eConfig_t *ecfg)
     else
       eCoresError("could not mmap eCores %p - %p\n", eCoreBgn, eCoreEnd);
 
-    munmap(esysregs, sizeof(eSysRegs));
+    munmap(ecfg->esys_regs_base, sizeof(eSysRegs));
   }
   else
     eCoresError("failed on mmap esysregs %p (errno %d, %s)! Cleaning up...\n", esysregs, errno, strerror(errno));
 
-  close(ecfg->fd); // TODO: makes no sense here
+  close(ecfg->fd);
 
   return -1;
 }
 
-void eCoresFini(int fd)
+void eCoresFini(eConfig_t *ecfg)
 {
-  // FIXME all below
-  eCoreMemMap_t* eCoreBgn = &ecfg.chip[0].eCoreRoot[0][0];
-  eCoreMemMap_t* eCoreEnd = &ecfg.chip[0].eCoreRoot[ecfg.chip[0].xyDim-1][ecfg.chip[0].xyDim-1];
+  typeof(&ecfg->emem[0]) emem = &ecfg->emem[0];
+  munmap(emem->epi_base, emem->size);
 
+  typeof(&ecfg->chip[0]) chip = &ecfg->chip[0];
+  eCoreMemMap_t* eCoreBgn = &chip->eCoreRoot[0][0];
+  eCoreMemMap_t* eCoreEnd = &chip->eCoreRoot[chip->xyDim-1][chip->xyDim-1];
   eCoreMunmap(eCoreBgn, eCoreEnd);
-  munmap(ecfg.esys_regs_base, sizeof(eSysRegs));
-  munmap((void*)ecfg.emem[0].epi_base, ecfg.emem[0].size);
-  close(fd);
+
+  munmap(ecfg->esys_regs_base, sizeof(eSysRegs));
+
+  close(ecfg->fd);
 }
 
 
@@ -443,8 +441,7 @@ static void init(void)
   char *eloglevels = getenv ("ELOGLEVEL");
   eloglevel = (eloglevels == NULL) ? 0 : atoi(eloglevels);
 
-  if((ecfg.fd = eOpen()) == -1
-     || eCoresBootstrap(&ecfg)) {
+  if(eCoresBootstrap(&ecfg)) {
     eCoresError("Failed to initialise EPIPHANY! Aborting...\n");
     exit(-1);
   }
@@ -498,7 +495,7 @@ static void init(void)
 __attribute__((destructor))
 static void fini(void)
 {
-  eCoresFini(ecfg.fd);
+  eCoresFini(&ecfg);
 }
 
 /*
