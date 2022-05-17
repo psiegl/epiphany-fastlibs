@@ -12,14 +12,14 @@
 #include <unistd.h>
 #define __DEFINE_ELOGLVL
 #include "ehal-print.h"
+#include "ehal-eCoreMmap.h"
 #include "loader/ehal_hdf_loader.h"
 #include "memmap-epiphany-system.h"
 #include "state/ident-adapteva-epiphany.h"
 #include "state/ident-xilinx-zynq.h"
 
 
-#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))   
-#define elemsof( x ) (sizeof(x)/sizeof(x[0]))
+#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
 
 
 // TODO: create one function that creates "the state"
@@ -40,105 +40,6 @@ eConfig_t ecfg = {
 };
 
 
-
-static char *fmtBytes(unsigned bytes)
-{
-  const char unit[] = {' ', 'K', 'M', 'G'}, *b = unit, *e = &unit[elemsof(unit)-1];
-  static char o[8];
-  if (bytes >> 10)
-    for ( ; bytes >> 10 && b < e; ++b, bytes >>= 10);
-  sprintf(o, "%4d %cB", bytes, *b);
-  return o;
-}
-
-
-int _eCoreMmap(int fd, eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
-{
-  assert( eCoreCur );
-  assert( eCoreBgn );
-  assert( eCoreEnd );
-
-  if(ECORE_ADDR_COLID(eCoreCur) > ECORE_ADDR_COLID(eCoreEnd)
-     || ECORE_ADDR_ROWID(eCoreCur) > ECORE_ADDR_ROWID(eCoreEnd))
-    return 0;
-
-  int flags = MAP_LOCKED;
-#ifdef MAP_FIXED_NOREPLACE
-  flags |= MAP_FIXED_NOREPLACE;
-#else
-  flags |= MAP_FIXED;
-#endif
-#ifdef MAP_SHARED_VALIDATE
-  flags |= MAP_SHARED_VALIDATE;
-#else
-  flags |= MAP_SHARED;
-#endif    
-  void *ebank = mmap((void*)eCoreCur->bank, sizeof(eCoreCur->bank), PROT_READ|PROT_WRITE, flags, fd, (off_t)eCoreCur->bank);
-  assert(ebank == eCoreCur->bank);
-  if(ebank != MAP_FAILED) {
-    eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%s) - eCore bank\n", eCoreCur->bank, eCoreCur->bank, fmtBytes(sizeof(eCoreCur->bank)) );
-
-    void *eregs = mmap(&eCoreCur->regs, sizeof(eCoreCur->regs), PROT_READ|PROT_WRITE, flags, fd, (off_t)&eCoreCur->regs);
-    assert(eregs == &eCoreCur->regs);
-    if(eregs != MAP_FAILED) {
-      eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%s) - eCore regs\n", &eCoreCur->regs, &eCoreCur->regs, fmtBytes(sizeof(eCoreCur->regs)) );
-
-      int isColEnd = ECORE_ADDR_COLID(eCoreCur) < ECORE_ADDR_COLID(eCoreEnd);
-      if(!_eCoreMmap(fd, isColEnd ? eCoreCur + 1
-                                  : eCoreBgn + ECORES_MAX_DIM,
-                         isColEnd ? eCoreBgn
-                                  : eCoreBgn + ECORES_MAX_DIM,
-                         eCoreEnd))
-        return 0;
-
-      munmap(eregs, sizeof(eCoreCur->regs));
-    }
-    else
-      eCoreError(eCoreCur, "mmap for %p regs %p failed (errno %d, %s)! Cleaning up...\n", eCoreCur, &eCoreCur->regs, errno, strerror(errno));
-
-    munmap(ebank, sizeof(eCoreCur->bank));
-  }
-  else
-    eCoreError(eCoreCur, "mmap for %p bank %p failed (errno %d, %s)! Cleaning up...\n", eCoreCur, eCoreCur->bank, errno, strerror(errno));
-
-  return -1;
-}
-
-int eCoreMmap(int fd, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
-{
-  assert( eCoreBgn );
-  assert( eCoreEnd );
-
-  eCoresPrintf(E_DBG, "Setting up EPIPHANY eCores mmap (%p-%p)\n", eCoreBgn, eCoreEnd);
-  return _eCoreMmap(fd, eCoreBgn, eCoreBgn, eCoreEnd);
-}
-
-/* should employ a pre- and post- */
-int _eCoreMunmap(eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
-{
-  assert( eCoreCur );
-  assert( eCoreBgn );
-  assert( eCoreEnd );
-
-  if(ECORE_ADDR_COLID(eCoreCur) > ECORE_ADDR_COLID(eCoreEnd)
-     || ECORE_ADDR_ROWID(eCoreCur) > ECORE_ADDR_ROWID(eCoreEnd))
-    return 0;
-
-  munmap(&eCoreCur->regs, sizeof(eCoreCur->regs));
-  munmap((void*)eCoreCur->bank, sizeof(eCoreCur->bank));
-
-  int isColEnd = ECORE_ADDR_COLID(eCoreCur) < ECORE_ADDR_COLID(eCoreEnd);
-  return _eCoreMunmap(isColEnd ? eCoreCur + 1 :
-                               eCoreBgn + ECORES_MAX_DIM,
-                    isColEnd ? eCoreBgn :
-                               eCoreBgn + ECORES_MAX_DIM,
-                    eCoreEnd);
-}
-
-int eCoreMunmap(eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
-{
-  return _eCoreMunmap(eCoreBgn, eCoreBgn, eCoreEnd);
-}
 
 // needs to be run upfront a program run, otherwise the epiphany won't signal anything back
 void eLinkUp(typeof(&((eSysRegs*)0x0)->esysconfig.reg) esysconfig,

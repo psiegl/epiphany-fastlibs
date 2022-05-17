@@ -44,4 +44,17 @@ extern unsigned eloglevel;
   fprintf (stderr, "[%2d,%2d] ERR: " format, ECORE_ADDR_ROWID(eCore), ECORE_ADDR_COLID(eCore), ##__VA_ARGS__); \
 })
 
+
+#define elemsof( x ) (sizeof(x)/sizeof(x[0]))
+
+static char *fmtBytes(unsigned bytes)
+{
+  const char unit[] = {' ', 'K', 'M', 'G'}, *b = unit, *e = &unit[elemsof(unit)-1];
+  static char o[8];
+  if (bytes >> 10)
+    for ( ; bytes >> 10 && b < e; ++b, bytes >>= 10);
+  sprintf(o, "%4d %cB", bytes, *b);
+  return o;
+}
+
 #endif /* __EHAL_PRINT__H */
