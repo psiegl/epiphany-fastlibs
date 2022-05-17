@@ -10,6 +10,18 @@
 #include "memmap-epiphany-cores.h"
 #include "loader/ehal_srec_loader.h"
 
+#define MEASURE( str, X ) \
+({ \
+  struct timeval tbgn, tend; \
+  gettimeofday(&tbgn, NULL); \
+  int ret = X; \
+  gettimeofday(&tend, NULL); \
+  printf("%s: measured: %ld μs\n", \
+         str, \
+         ((tend.tv_sec * 1000000 + tend.tv_usec) \
+         - (tbgn.tv_sec * 1000000 + tbgn.tv_usec))); \
+  ret; \
+})
 
 // 2016.11 epiphany-hal.c
 
@@ -268,20 +280,10 @@ int main(int argc, char* argv[])
   reset(); // first reset!!!!!!!!!! otherwise Zynq will hang.
   printf("attempted reset!\n");
 
-
-  printf("let us go for it\n");
-
+  // TODO: get from library
   eCoreMemMap_t* eCoreBgn = 0x0;
   eCoreBgn += ECORE_NEXT( 32, 8 );
   assert(eCoreBgn == (void*)0x80800000);
-  
-  
-  
-  unsigned t = eCoreBgn->regs.debugstatus.reg;
-  printf("%d\n", t);
-
-  t = *(unsigned char*)0x80807ffd;
-  printf("%d\n", t);
   
   const char *srectest =  "S0110000655F736569736D69632E7372656362\r\n"
                           "S30900000000E82C0000E2\r\n"
@@ -296,8 +298,8 @@ int main(int argc, char* argv[])
   printf("%s\n", srectest);
 
   memset( (char*)eCoreBgn->sram, 0, 0x8000 );
-  int ret = parse_srec(srectest, srectest + strlen(srectest),
-                      eCoreBgn, eCoreBgn);
+  int ret = MEASURE("parse_srec", parse_srec(srectest, srectest + strlen(srectest),
+                                  eCoreBgn, eCoreBgn));
   printf("%d\n", ret);
   printf("--> 80800058 %x\n", *(uint32_t*)0x80800058);
   printf("--> 80800058 %x\n", *(char*)0x80800058);
