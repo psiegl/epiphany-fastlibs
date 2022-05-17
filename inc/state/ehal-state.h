@@ -53,6 +53,7 @@ typedef struct                      // default values:
     eChip_t type;                   //*                                   └> E16G301
   } chip[1];
   /* TODO: ptr to local chip */
+  int fd;                           // file descriptor of EPIPHANY
 
   unsigned num_ext_mems;            //                                 1
                                     // EMEM                     ext-DRAM

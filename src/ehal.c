@@ -30,6 +30,7 @@ eConfig_t ecfg = {
   .chip[0].eCoreRoot      = (eCoresGMemMap)0x80800000,
   .chip[0].xyDim          = 4,
   .chip[0].type           = E16G301,
+  .fd                     = -1,
 
   .num_ext_mems           = 1,
   .emem[0].base_address   = 0x3e000000,
@@ -37,7 +38,6 @@ eConfig_t ecfg = {
   .emem[0].size           = 0x02000000,
   .emem[0].prot           = PROT_READ|PROT_WRITE
 };
-unsigned epiphanyfd;
 
 
 
@@ -50,13 +50,6 @@ static char *fmtBytes(unsigned bytes)
   sprintf(o, "%4d %cB", bytes, *b);
   return o;
 }
-
-
-
-
-
-
-
 
 
 int _eCoreMmap(int fd, eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
@@ -213,7 +206,7 @@ int eOpen(void)
   return eCoresFd;
 }
 
-int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
+int eCoresBootstrap(eConfig_t *ecfg)
 {
   // Idea: We need to read the HDF to get initial values:
   //       - esys_regs_base
@@ -227,10 +220,10 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
     return -1;
   }
   // TODO: implement some logic to combine
-  if(memcmp(ecfg, &ecfgHdf, sizeof(*ecfg))) {
-    eCoresError("Supplied HDF is different to default cfg! Aborting...\n");
-    return -1;
-  }
+//  if(memcmp(ecfg, &ecfgHdf, sizeof(*ecfg))) {
+//    eCoresError("Supplied HDF is different to default cfg! Aborting...\n");
+//    return -1;
+//  }
 
   eCoresPrintf(E_DBG, "Setting up Zynq FPGA regs / shm to EPIPHANY eCores\n" );
   // Can not use MAP_FIXED_NOREPLACE as it would 'normally' overlap with eCore mmap
@@ -241,10 +234,11 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
   flags |= MAP_SHARED;
 #endif
   // The EPIPHANY FPGA regs visible by the Zynq, are mapped onto the [32, 8] eCore regs memory mapped page
-  eSysRegs* esysregs = (eSysRegs*) mmap(ecfg->esys_regs_base, sizeof(eSysRegs), PROT_READ|PROT_WRITE, flags, eCoresFd, (off_t)ecfg->esys_regs_base );
+  eSysRegs* esysregs = (eSysRegs*) mmap(ecfg->esys_regs_base, sizeof(eSysRegs), PROT_READ|PROT_WRITE, flags, ecfg->fd, (off_t)ecfg->esys_regs_base );
   assert(esysregs == ecfg->esys_regs_base);
   if(esysregs != MAP_FAILED) {
-    eCoresPrintf(E_DBG, "VA %p, PA %p (%s) - eCores FPGA regs\n", ecfg->esys_regs_base, ecfg->esys_regs_base, fmtBytes(sizeof(eSysRegs)) );
+    eCoresPrintf(E_DBG, "VA %p, PA %p (%s) - eCores FPGA regs\n",
+                 ecfg->esys_regs_base, ecfg->esys_regs_base, fmtBytes(sizeof(eSysRegs)) );
     typeof(&ecfg->chip[0]) chip = &ecfg->chip[0];
 
     // as the FPGA regs are now visible, we can check what configuration is given.
@@ -261,7 +255,7 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
     eCoresPrintf(E_DBG, "Identified EPIPHANY eCores (%p-%p), xydim: %dx%d\n",
                  eCoreBgn, eCoreEnd, chip->xyDim, chip->xyDim);
 
-    if(!eCoreMmap(eCoresFd, eCoreBgn, eCoreEnd)) {
+    if(!eCoreMmap(ecfg->fd, eCoreBgn, eCoreEnd)) {
 
       // after the mmap'ed regions are up, let us enable the east elink:
       eLinkUp(&esysregs->esysconfig.reg, chip->eCoreRoot, chip->type); // FIXME
@@ -276,7 +270,7 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
         printf("will try hugetlb!\n");
       }
 #endif
-      void* eshm = mmap(emem->epi_base, emem->size, emem->prot, flags, eCoresFd, emem->base_address);
+      void* eshm = mmap(emem->epi_base, emem->size, emem->prot, flags, ecfg->fd, emem->base_address);
       assert(eshm == emem->epi_base);
       if(eshm != MAP_FAILED) {
 // In case MAP_HUGETLB is not defined, let us try the 2nd option:
@@ -312,7 +306,7 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
   else
     eCoresError("failed on mmap esysregs %p (errno %d, %s)! Cleaning up...\n", esysregs, errno, strerror(errno));
 
-  close(eCoresFd);
+  close(ecfg->fd); // TODO: makes no sense here
 
   return -1;
 }
@@ -449,8 +443,8 @@ static void init(void)
   char *eloglevels = getenv ("ELOGLEVEL");
   eloglevel = (eloglevels == NULL) ? 0 : atoi(eloglevels);
 
-  if((epiphanyfd = eOpen()) == -1
-     || eCoresBootstrap(epiphanyfd, &ecfg)) {
+  if((ecfg.fd = eOpen()) == -1
+     || eCoresBootstrap(&ecfg)) {
     eCoresError("Failed to initialise EPIPHANY! Aborting...\n");
     exit(-1);
   }
@@ -483,8 +477,8 @@ static void init(void)
          "\n"
          "Init in ~%ld μs (~%ldt Inst.)\n"
          "\n",
-         xlxZynqDevice(epiphanyfd),
-         xlxZynqSiliconRevision(epiphanyfd),
+         xlxZynqDevice(ecfg.fd),
+         xlxZynqSiliconRevision(ecfg.fd),
          eChipTypeToStr(ecfg.esys_regs_base), eChipCapsToStr(ecfg.esys_regs_base),
          eChipRevision(ecfg.esys_regs_base),
          eCoreBgn, ((uint8_t*)(eCoreEnd + 1))-1,
@@ -504,7 +498,7 @@ static void init(void)
 __attribute__((destructor))
 static void fini(void)
 {
-  eCoresFini(epiphanyfd);
+  eCoresFini(ecfg.fd);
 }
 
 /*
