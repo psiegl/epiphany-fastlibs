@@ -21,30 +21,17 @@
 #define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))   
 #define elemsof( x ) (sizeof(x)/sizeof(x[0]))
 
-#define MEASURE( str, X ) \
-({ \
-  struct timeval tbgn, tend; \
-  gettimeofday(&tbgn, NULL); \
-  int ret = X; \
-  gettimeofday(&tend, NULL); \
-  printf("%s: measured: %ld μs\n", \
-         str, \
-         ((tend.tv_sec * 1000000 + tend.tv_usec) \
-         - (tbgn.tv_sec * 1000000 + tbgn.tv_usec))); \
-  ret; \
-})
-
 
 // TODO: create one function that creates "the state"
 eConfig_t ecfg = {
-  .esys_regs_base      = (eSysRegs*)0x808f0000,
+  .esys_regs_base         = (eSysRegs*)0x808f0000,
 
-  .num_chips           = 1,
-  .chip[0].eCoreRoot   = (eCoresGMemMap)0x80800000,
-  .chip[0].xyDim       = 4,
-  .chip[0].type        = E16G301,
+  .num_chips              = 1,
+  .chip[0].eCoreRoot      = (eCoresGMemMap)0x80800000,
+  .chip[0].xyDim          = 4,
+  .chip[0].type           = E16G301,
 
-  .num_ext_mems        = 1,
+  .num_ext_mems           = 1,
   .emem[0].base_address   = 0x3e000000,
   .emem[0].epi_base       = (char*)0x8e000000,
   .emem[0].size           = 0x02000000,
@@ -134,8 +121,7 @@ int eCoreMmap(int fd, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
 }
 
 /* should employ a pre- and post- */
-int _eCoreIter(eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd,
-               int (*fpre)(eCoreMemMap_t* eCoreCur), int (*fpost)(eCoreMemMap_t* eCoreCur, int ret))
+int _eCoreMunmap(eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
 {
   assert( eCoreCur );
   assert( eCoreBgn );
@@ -145,34 +131,20 @@ int _eCoreIter(eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* 
      || ECORE_ADDR_ROWID(eCoreCur) > ECORE_ADDR_ROWID(eCoreEnd))
     return 0;
 
-  int ret = fpre ? (*fpre)(eCoreCur) : 0;
-  if( ! ret ) {
-    int isColEnd = ECORE_ADDR_COLID(eCoreCur) < ECORE_ADDR_COLID(eCoreEnd);
-    ret = _eCoreIter(isColEnd ? eCoreCur + 1 :
-                                eCoreBgn + ECORES_MAX_DIM,
-                     isColEnd ? eCoreBgn :
-                                eCoreBgn + ECORES_MAX_DIM,
-                     eCoreEnd, fpre, fpost);
-    if( fpost )
-      ret = (*fpost)(eCoreCur, ret);
-  }
-  return ret;
-}
-
-// externally visible
-int eCoreIter(eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd,
-              int (*fpre)(eCoreMemMap_t* eCoreCur), int (*fpost)(eCoreMemMap_t* eCoreCur, int ret))
-{
-  return ( !eCoreBgn || !eCoreEnd ) ? -1 : _eCoreIter(eCoreBgn, eCoreBgn, eCoreEnd, fpre, fpost);
-}
-
-int eCoreMunmapPre(eCoreMemMap_t* eCoreCur)
-{
-  assert( eCoreCur );
-
   munmap(&eCoreCur->regs, sizeof(eCoreCur->regs));
   munmap((void*)eCoreCur->bank, sizeof(eCoreCur->bank));
-  return 0;
+
+  int isColEnd = ECORE_ADDR_COLID(eCoreCur) < ECORE_ADDR_COLID(eCoreEnd);
+  return _eCoreMunmap(isColEnd ? eCoreCur + 1 :
+                               eCoreBgn + ECORES_MAX_DIM,
+                    isColEnd ? eCoreBgn :
+                               eCoreBgn + ECORES_MAX_DIM,
+                    eCoreEnd);
+}
+
+int eCoreMunmap(eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
+{
+  return _eCoreMunmap(eCoreBgn, eCoreBgn, eCoreEnd);
 }
 
 // needs to be run upfront a program run, otherwise the epiphany won't signal anything back
@@ -330,7 +302,7 @@ int eCoresBootstrap(int eCoresFd, eConfig_t *ecfg)
       else
         eCoresError("failed on mmap eshm %p (errno %d, %s)! Cleaning up...\n", eshm, errno, strerror(errno));
 
-      eCoreIter(eCoreBgn, eCoreEnd, &eCoreMunmapPre, NULL);
+      eCoreMunmap(eCoreBgn, eCoreEnd);
     }
     else
       eCoresError("could not mmap eCores %p - %p\n", eCoreBgn, eCoreEnd);
@@ -351,7 +323,7 @@ void eCoresFini(int fd)
   eCoreMemMap_t* eCoreBgn = &ecfg.chip[0].eCoreRoot[0][0];
   eCoreMemMap_t* eCoreEnd = &ecfg.chip[0].eCoreRoot[ecfg.chip[0].xyDim-1][ecfg.chip[0].xyDim-1];
 
-  eCoreIter(eCoreBgn, eCoreEnd, &eCoreMunmapPre, NULL);
+  eCoreMunmap(eCoreBgn, eCoreEnd);
   munmap(ecfg.esys_regs_base, sizeof(eSysRegs));
   munmap((void*)ecfg.emem[0].epi_base, ecfg.emem[0].size);
   close(fd);
