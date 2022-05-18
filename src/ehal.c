@@ -13,7 +13,7 @@
 #define __DEFINE_ELOGLVL
 #include "ehal-print.h"
 #include "ehal-mmap.h"
-#include "loader/ehal_hdf_loader.h"
+#include "loader/ehal-hdf-loader.h"
 #include "memmap-epiphany-system.h"
 #include "state/ident-adapteva-epiphany.h"
 #include "state/ident-xilinx-zynq.h"

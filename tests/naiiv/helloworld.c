@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <memmap-epiphany-cores.h>
-#include <loader/ehal_srec_loader.h>
+#include <loader/ehal-srec-loader.h>
 
 #define MEASURE( str, X ) \
 ({ \

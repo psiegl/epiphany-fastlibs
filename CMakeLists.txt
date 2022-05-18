@@ -8,9 +8,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 add_library(ehal SHARED
 	src/state/ident-adapteva-epiphany.c
 	src/state/ident-xilinx-zynq.c
-	src/loader/ehal_generic_file_loader.c
-	src/loader/ehal_hdf_loader.c
-	src/loader/ehal_srec_loader.c
+	src/loader/ehal-gen-file-loader.c
+	src/loader/ehal-hdf-loader.c
+	src/loader/ehal-srec-loader.c
 	src/ehal-mmap.c
 	src/ehal.c
 )

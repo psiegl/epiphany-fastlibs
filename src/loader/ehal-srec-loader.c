@@ -13,7 +13,7 @@
 #include <sys/mman.h> 
 #include "memmap-epiphany-cores.h"
 #include "ehal-print.h"
-#include "loader/ehal_generic_file_loader.h"
+#include "loader/ehal-gen-file-loader.h"
 
 
 #define EMEM_SIZE (0x02000000) // TODO: remove
