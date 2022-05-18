@@ -224,7 +224,7 @@ void eCoresFini(eConfig_t *ecfg)
 
 
 
-__attribute__((constructor))
+__attribute__((constructor (101))) /* prios 0-100 are preserved */
 static void init(void)
 {
   struct timeval tbgn, tend;
@@ -393,7 +393,7 @@ static void init(void)
          init_us, (init_us * 667 /* MHz -> Zynq frequency */)/1000 );
 }
 
-__attribute__((destructor))
+__attribute__((destructor (101))) /* prios 0-100 are preserved */
 static void fini(void)
 {
   eCoresFini(&ecfg);
