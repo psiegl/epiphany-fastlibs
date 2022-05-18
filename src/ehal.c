@@ -342,6 +342,11 @@ static void init(void)
   char *eloglevels = getenv ("ELOGLEVEL");
   eloglevel = (eloglevels == NULL) ? 0 : atoi(eloglevels);
 
+  if(getuid()) {
+    eCoresError("You are not root! Solely root can open devices! Aborting...\n");
+    exit(-1);
+  }
+
   if(eCoresBootstrap(&ecfg)) {
     eCoresError("Failed to initialise EPIPHANY! Aborting...\n");
     exit(-1);
