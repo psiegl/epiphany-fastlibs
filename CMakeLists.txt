@@ -11,7 +11,7 @@ add_library(ehal SHARED
 	src/loader/ehal_generic_file_loader.c
 	src/loader/ehal_hdf_loader.c
 	src/loader/ehal_srec_loader.c
-	src/ehal-eCoreMmap.c
+	src/ehal-mmap.c
 	src/ehal.c
 )
 

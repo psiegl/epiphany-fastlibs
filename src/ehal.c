@@ -12,7 +12,7 @@
 #include <unistd.h>
 #define __DEFINE_ELOGLVL
 #include "ehal-print.h"
-#include "ehal-eCoreMmap.h"
+#include "ehal-mmap.h"
 #include "loader/ehal_hdf_loader.h"
 #include "memmap-epiphany-system.h"
 #include "state/ident-adapteva-epiphany.h"
@@ -122,19 +122,11 @@ int eCoresBootstrap(eConfig_t *ecfg)
   }
 
   eCoresPrintf(E_DBG, "Setting up Zynq FPGA regs / shm to EPIPHANY eCores\n" );
-  // Can not use MAP_FIXED_NOREPLACE as it would 'normally' overlap with eCore mmap
-  int flags = MAP_FIXED | MAP_LOCKED;
-#ifdef MAP_SHARED_VALIDATE
-  flags |= MAP_SHARED_VALIDATE;
-#else
-  flags |= MAP_SHARED;
-#endif
+
   // The EPIPHANY FPGA regs visible by the Zynq, are mapped onto the [32, 8] eCore regs memory mapped page
-  eSysRegs* esysregs = (eSysRegs*) mmap(ecfg->esys_regs_base, sizeof(eSysRegs), PROT_READ|PROT_WRITE, flags, ecfg->fd, (off_t)ecfg->esys_regs_base );
-  assert(esysregs == ecfg->esys_regs_base);
-  if(esysregs != MAP_FAILED) {
-    eCoresPrintf(E_DBG, "VA %p, PA %p (%s) - eCores FPGA regs\n",
-                 ecfg->esys_regs_base, ecfg->esys_regs_base, fmtBytes(sizeof(eSysRegs)) );
+  if(!eSysRegsMmap(ecfg->fd, ecfg->esys_regs_base)) {
+    eSysRegs* esysregs = ecfg->esys_regs_base;
+    
     typeof(&ecfg->chip[0]) chip = &ecfg->chip[0];
 
     // as the FPGA regs are now visible, we can check what configuration is given.
@@ -157,50 +149,17 @@ int eCoresBootstrap(eConfig_t *ecfg)
       eLinkUp(&esysregs->esysconfig.reg, chip->eCoreRoot, chip->type); // FIXME
       eCoresPrintf(E_DBG, "Zynq <-> EPIPHANY: Enabled EAST eLink\n");
 
-      typeof(&ecfg->emem[0]) emem = &ecfg->emem[0];
-// https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
-#if defined(MAP_HUGETLB) && defined(MAP_HUGE_2MB) // ToDo: check if working
-      if(emem->size >= 0x200000 /* 2MB */
-         && !(emem->size % 0x200000)) {
-        flags |= MAP_HUGETLB | MAP_HUGE_2MB;
-        printf("will try hugetlb!\n");
-      }
-#endif
-      void* eshm = mmap(emem->epi_base, emem->size, emem->prot, flags, ecfg->fd, emem->base_address);
-      assert(eshm == emem->epi_base);
-      if(eshm != MAP_FAILED) {
-// In case MAP_HUGETLB is not defined, let us try the 2nd option:
-// Quote:      "It is mostly intended for
-//              embedded systems, where MADV_HUGEPAGE-style behavior may
-//              not be enabled by default in the kernel."
-// https://man7.org/linux/man-pages/man2/madvise.2.html
-// Do not care about return value, as it is just hint to Linux
-#if ! (defined(MAP_HUGETLB) && defined(MAP_HUGE_2MB)) && defined(MADV_HUGEPAGE)
-        int madvHugepage = madvise(eshm, emem->size, MADV_HUGEPAGE);
-        eCoresPrintf(E_DBG, "Zynq <-> eCores shm: madvise(MADV_HUGEPAGE): %d%s%s%s\n",
-                     madvHugepage,
-                     madvHugepage ? " (" : "",
-                     madvHugepage ? strerror(errno) : "",
-                     madvHugepage ? ")" : "" );
-#endif
-        
-        eCorePrintf(E_DBG, eshm, "VA %p, PA %p (%s) - Zynq <-> eCores shm\n", eshm, (void*)emem->base_address, fmtBytes(emem->size) );
+      if(!eShmMmap(ecfg->fd, &ecfg->emem[0])) {
         return 0;
 
-        //munmap(emem->epi_base, emem->size);
+        //eShmMunmap(&ecfg->emem[0]);
       }
-      else
-        eCoresError("failed on mmap eshm %p (errno %d, %s)! Cleaning up...\n", eshm, errno, strerror(errno));
 
       eCoreMunmap(eCoreBgn, eCoreEnd);
     }
-    else
-      eCoresError("could not mmap eCores %p - %p\n", eCoreBgn, eCoreEnd);
 
-    munmap(ecfg->esys_regs_base, sizeof(eSysRegs));
+    eSysRegsMunmap(ecfg->esys_regs_base);
   }
-  else
-    eCoresError("failed on mmap esysregs %p (errno %d, %s)! Cleaning up...\n", esysregs, errno, strerror(errno));
 
   close(ecfg->fd);
 
@@ -209,15 +168,14 @@ int eCoresBootstrap(eConfig_t *ecfg)
 
 void eCoresFini(eConfig_t *ecfg)
 {
-  typeof(&ecfg->emem[0]) emem = &ecfg->emem[0];
-  munmap(emem->epi_base, emem->size);
+  eShmMunmap(&ecfg->emem[0]);
 
   typeof(&ecfg->chip[0]) chip = &ecfg->chip[0];
   eCoreMemMap_t* eCoreBgn = &chip->eCoreRoot[0][0];
   eCoreMemMap_t* eCoreEnd = &chip->eCoreRoot[chip->xyDim-1][chip->xyDim-1];
   eCoreMunmap(eCoreBgn, eCoreEnd);
 
-  munmap(ecfg->esys_regs_base, sizeof(eSysRegs));
+  eSysRegsMunmap(ecfg->esys_regs_base);
 
   close(ecfg->fd);
 }
