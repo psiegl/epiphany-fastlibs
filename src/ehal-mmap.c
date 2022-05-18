@@ -100,6 +100,9 @@ int eCoreMunmap(eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
 
 int eShmMmap(int fd, typeof(&((eConfig_t*)0x0)->emem[0]) emem)
 {
+  assert( fd >= 0 );
+  assert( emem );
+
   // Can not use MAP_FIXED_NOREPLACE as it would 'normally' overlap with eCore mmap
   int flags = MAP_FIXED | MAP_LOCKED;
 #ifdef MAP_SHARED_VALIDATE
@@ -145,12 +148,17 @@ int eShmMmap(int fd, typeof(&((eConfig_t*)0x0)->emem[0]) emem)
 
 int eShmMunmap(typeof(&((eConfig_t*)0x0)->emem[0]) emem)
 {
+  assert( emem );
+
   return munmap(emem->epi_base, emem->size);
 }
 
 
 int eSysRegsMmap(int fd, eSysRegs* esys_regs_base)
 {
+  assert( fd >= 0 );
+  assert( esys_regs_base );
+
   // Can not use MAP_FIXED_NOREPLACE as it would 'normally' overlap with eCore mmap
   int flags = MAP_FIXED | MAP_LOCKED;
 #ifdef MAP_SHARED_VALIDATE
@@ -174,6 +182,8 @@ int eSysRegsMmap(int fd, eSysRegs* esys_regs_base)
 
 int eSysRegsMunmap(eSysRegs* esys_regs_base)
 {
+  assert( esys_regs_base );
+
   return munmap(esys_regs_base, sizeof(*esys_regs_base));
 }
 
