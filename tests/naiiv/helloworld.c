@@ -36,13 +36,17 @@ int main(int argc, char* argv[])
   eCoreBgn += ECORE_NEXT( 32, 8 );
   assert(eCoreBgn == (void*)0x80800000);
   
-  const char *srectest =  "S0110000655F736569736D69632E7372656362\r\n";
-
-  printf("%s\n", srectest);
-
+// S3  11  00000058  0B 6E E2 00 0B 60 02 10 52 0D 00 00  5F
+  const char *srectest =  "S311000000580B6EE2000B600210520D00005F\r\n";
+  uintptr_t address = 0x58;
+  uint8_t data[] = { 0x0B, 0x6E, 0xE2, 0x00,
+                     0x0B, 0x60, 0x02, 0x10,
+                     0x52, 0x0D, 0x00, 0x00 };
+  
   int ret = MEASURE("parse_srec", parse_srec(srectest, srectest + strlen(srectest),
                                   eCoreBgn, eCoreBgn));
-  printf("%d\n", ret);
 
-  return 0;
+  char* emem = (char*)&eCoreBgn->sram[ address ];
+
+  return memcmp(emem, data, sizeof(data));
 }
