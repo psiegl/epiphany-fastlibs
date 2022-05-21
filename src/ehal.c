@@ -42,8 +42,8 @@ eConfig_t ecfg = {
 
 
 // needs to be run upfront a program run, otherwise the epiphany won't signal anything back
-void eLinkUp(typeof(&((eSysRegs*)0x0)->esysconfig.reg) esysconfig,
-             eCoresGMemMap eCoreRoot, eChip_t type)
+void eEastLinkUp(typeof(&((eSysRegs*)0x0)->esysconfig.reg) esysconfig,
+                 eCoresGMemMap eCoreRoot, eChip_t type)
 {
   assert( esysconfig );
   assert( eCoreRoot );
@@ -76,7 +76,7 @@ void eCoresReset(void)
   asm volatile("" ::: "memory");
   usleep(200000);
 
-  eLinkUp(&esysregs->esysconfig.reg); // FIXME
+  eEastLinkUp(&esysregs->esysconfig.reg); // FIXME
 }
 #endif
 
@@ -121,12 +121,11 @@ int eCoresBootstrap(eConfig_t *ecfg)
     return -1;
   }
 
-  eCoresPrintf(E_DBG, "Setting up Zynq FPGA regs / shm to EPIPHANY eCores\n" );
+  eCoresPrintf(E_DBG, "Setting up EPIPHANY eCores, esysregs and shm to Zynq FPGA\n" );
 
   // The EPIPHANY FPGA regs visible by the Zynq, are mapped onto the [32, 8] eCore regs memory mapped page
   if(!eSysRegsMmap(ecfg->fd, ecfg->esys_regs_base)) {
     eSysRegs* esysregs = ecfg->esys_regs_base;
-    
     typeof(&ecfg->chip[0]) chip = &ecfg->chip[0];
 
     // as the FPGA regs are now visible, we can check what configuration is given.
@@ -146,7 +145,7 @@ int eCoresBootstrap(eConfig_t *ecfg)
     if(!eCoreMmap(ecfg->fd, eCoreBgn, eCoreEnd)) {
 
       // after the mmap'ed regions are up, let us enable the east elink:
-      eLinkUp(&esysregs->esysconfig.reg, chip->eCoreRoot, chip->type); // FIXME
+      eEastLinkUp(&esysregs->esysconfig.reg, chip->eCoreRoot, chip->type); // FIXME
       eCoresPrintf(E_DBG, "Zynq <-> EPIPHANY: Enabled EAST eLink\n");
 
       if(!eShmMmap(ecfg->fd, &ecfg->emem[0])) {
@@ -197,12 +196,12 @@ static void init(void)
 // 
   assert(sysconf(_SC_PAGESIZE) == PAGESIZE);
 
-  BUILD_BUG_ON(sizeof(eCoreDMA_t)    != 0x20);
-  BUILD_BUG_ON(sizeof(eCoreIVT_t)    != 0x28);
-  BUILD_BUG_ON(sizeof(eCoreRegs_t)   != PAGESIZE);
-  BUILD_BUG_ON(sizeof(eCoreMemMapSW_t) != 0x100000);
-  BUILD_BUG_ON(sizeof(eCoreMemMap_t) != 0x100000);
-  BUILD_BUG_ON(sizeof(eSysRegs)     != PAGESIZE);
+  BUILD_BUG_ON(sizeof(eCoreDMA_t)                                     != 0x20);
+  BUILD_BUG_ON(sizeof(eCoreIVT_t)                                     != 0x28);
+  BUILD_BUG_ON(sizeof(eCoreRegs_t)                                    != PAGESIZE);
+  BUILD_BUG_ON(sizeof(eCoreMemMapSW_t)                                != 0x100000);
+  BUILD_BUG_ON(sizeof(eCoreMemMap_t)                                  != 0x100000);
+  BUILD_BUG_ON(sizeof(eSysRegs)                                       != PAGESIZE);
 
   BUILD_BUG_ON( &((eCoreRegs_t*)0x0)->r[0]                            != (void*)0x0000 );
   BUILD_BUG_ON( &((eCoreRegs_t*)0x0)->r[63]                           != (void*)0x00FC );
@@ -263,16 +262,16 @@ static void init(void)
   BUILD_BUG_ON( &((eCoreRegs_t*)0x0)->chipioregs.chipreset            != (void*)0x0324 );
   BUILD_BUG_ON( &((eCoreRegs_t*)0x0)->chipioregs.elinkdebug           != (void*)0x0328 );
   
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.sync                      != (void*)0x00000 );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.softwareexception         != (void*)0x00004 );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.memoryfault               != (void*)0x00008 );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.timerinterrupt[0]         != (void*)0x0000C );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.timerinterrupt[1]         != (void*)0x00010 );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.message                   != (void*)0x00014 );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.dmainterrupt[0]           != (void*)0x00018 );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.dmainterrupt[1]           != (void*)0x0001C );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.wandinterrupt             != (void*)0x00020 );
-  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.userinterrupt             != (void*)0x00024 );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.sync                    != (void*)0x00000 );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.softwareexception       != (void*)0x00004 );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.memoryfault             != (void*)0x00008 );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.timerinterrupt[0]       != (void*)0x0000C );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.timerinterrupt[1]       != (void*)0x00010 );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.message                 != (void*)0x00014 );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.dmainterrupt[0]         != (void*)0x00018 );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.dmainterrupt[1]         != (void*)0x0001C );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.wandinterrupt           != (void*)0x00020 );
+  BUILD_BUG_ON( &((eCoreMemMapSW_t*)0x0)->ivt.userinterrupt           != (void*)0x00024 );
 
   BUILD_BUG_ON( &((eCoreMemMap_t*)0x0)->bank[0]                       != (void*)0x00000 );
   BUILD_BUG_ON( &((eCoreMemMap_t*)0x0)->bank[1]                       != (void*)0x02000 );
@@ -288,12 +287,12 @@ static void init(void)
   BUILD_BUG_ON( &((eCoresGMemMap)0x0)[35][35]                         != (void*)0x8E300000 );
   BUILD_BUG_ON( &((eCoresGMemMap)0x0)[39][39]                         != (void*)0x9E700000 );
 
-  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysconfig                 != (void*)0x808f0f00 );
-  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysreset                  != (void*)0x808f0f04 );
-  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysinfo                   != (void*)0x808f0f08 );
-  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysfilterl                != (void*)0x808f0f0c );
-  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysfilterh                != (void*)0x808f0f10 );
-  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysfilterc                != (void*)0x808f0f14 );
+  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysconfig                  != (void*)0x808f0f00 );
+  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysreset                   != (void*)0x808f0f04 );
+  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysinfo                    != (void*)0x808f0f08 );
+  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysfilterl                 != (void*)0x808f0f0c );
+  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysfilterh                 != (void*)0x808f0f10 );
+  BUILD_BUG_ON( &((eSysRegs*)0x808f0000)->esysfilterc                 != (void*)0x808f0f14 );
 /////////////////////////////////////
 /////////////////////////////////////
 
@@ -322,19 +321,17 @@ static void init(void)
          "Xilinx Zynq %s (silicon rev. %0.1f)\n"
          "Adapteva %s (%s, rev. %d)\n"
          "\n"
-         "Epiphany cores    [%p:%p] [%2d,%2d] to [%2d,%2d]\n"
-         "Zynq Epiphany shm [%p:%p] [%2d,%2d] to [%2d,%2d]\n"
+         "EPIPHANY cores        [%p:%p] [%2d,%2d] to [%2d,%2d]\n"
+         "Zynq <-> EPIPHANY shm [%p:%p] [%2d,%2d] to [%2d,%2d]\n"
          "\n"
          
-         "           (connector)\n"
-         "                N\n"
-         "     [%2d,%2d]┌─┬─┲━┱─┐EPIPHANY\n"
-         "            ├─┼─╄━╃─┤\n"
-         "(unwired) W ┢━╅─┼─╆━┪ E (wired to Zynq)\n"
-         "            ┡━╃─╆━╋━┩            [%2d,%2d]┌─┬─┬···┬─┬─┐DRAM\n"
-         "            └─┴─┺━┹─┘[%2d,%2d]            └─┴─┴···┴─┴─┘[%2d,%2d]\n"
-         "                S\n"
-         "           (connector)\n"
+         "             N                      N,S: connector\n"
+         "  [%2d,%2d]┌─┬─┲━┱─┐EPIPHANY          E  : wired to Zynq\n"
+         "         ├─┼─╄━╃─┤                  W  : unwired\n"
+         "       W ┢━╅─┼─╆━┪ E\n"
+         "         ┡━╃─╆━╋━┩           [%2d,%2d]┌─┬─┬···┬─┬─┐Zynq DRAM\n"
+         "         └─┴─┺━┹─┘[%2d,%2d]           └─┴─┴···┴─┴─┘[%2d,%2d]\n"
+         "             S\n"
          "\n"
          "Init in ~%ld μs (~%ldt Inst.)\n"
          "\n",

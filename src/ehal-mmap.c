@@ -31,7 +31,7 @@ int _eCoreMmap(int fd, eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMe
 #else
   flags |= MAP_SHARED;
 #endif    
-  void *ebank = mmap((void*)eCoreCur->bank, sizeof(eCoreCur->bank), PROT_READ|PROT_WRITE, flags, fd, (off_t)eCoreCur->bank);
+  void *ebank = mmap(eCoreCur->bank, sizeof(eCoreCur->bank), PROT_READ|PROT_WRITE, flags, fd, (off_t)eCoreCur->bank);
   assert(ebank == eCoreCur->bank);
   if(ebank != MAP_FAILED) {
     eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%s) - eCore bank\n", eCoreCur->bank, eCoreCur->bank, fmtBytes(sizeof(eCoreCur->bank)) );
