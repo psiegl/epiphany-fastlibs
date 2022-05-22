@@ -60,4 +60,7 @@ install(TARGETS ehal
 
 
 include(CTest)
-add_subdirectory(tests/naiiv)
+file(GLOB testcases RELATIVE ${CMAKE_SOURCE_DIR}/tests ${CMAKE_SOURCE_DIR}/tests/*)
+foreach(test ${testcases})
+  add_subdirectory(tests/${test})
+endforeach()
