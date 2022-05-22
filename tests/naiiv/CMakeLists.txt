@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-2-Clause
+# SPDX-FileCopyrightText:  2022 Patrick Siegl <code@siegl.it>
 
 #include_directories(${CMAKE_SOURCE_DIR}/inc)
 link_directories(${CMAKE_BINARY_DIR}/)
