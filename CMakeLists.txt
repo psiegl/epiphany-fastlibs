@@ -29,19 +29,23 @@ if(EHAL_BACKWARD_COMPATIBILITY)
 	file(DOWNLOAD https://raw.githubusercontent.com/adapteva/epiphany-libs/2019.1/e-hal/src/epiphany-hal-data-local.h ${CMAKE_BINARY_DIR}/extern/e-hal/inc/epiphany-hal-data-local.h)
 	file(DOWNLOAD https://raw.githubusercontent.com/adapteva/epiphany-libs/2019.1/e-hal/src/epiphany-hal-data.h ${CMAKE_BINARY_DIR}/extern/e-hal/inc/epiphany-hal-data.h)
 
-  add_library(ehal-backward-comp OBJECT src/ehal-backward-comp.c)
-  set_property(TARGET ehal-backward-comp PROPERTY POSITION_INDEPENDENT_CODE ON)
-  target_include_directories(ehal-backward-comp PUBLIC
+	add_library(ehal-backward-comp OBJECT src/ehal-backward-comp.c)
+	set_property(TARGET ehal-backward-comp PROPERTY POSITION_INDEPENDENT_CODE ON)
+	target_include_directories(ehal-backward-comp PUBLIC
 		${CMAKE_BINARY_DIR}/extern/e-hal/inc/)
+
+	set(SOURCE
+		${SOURCE}
+		$<TARGET_OBJECTS:ehal-backward-comp>)
 
 endif(EHAL_BACKWARD_COMPATIBILITY)
 
 
 include_directories(${HEADER})
 add_library(ehal SHARED ${SOURCE})
-if(EHAL_BACKWARD_COMPATIBILITY)
-	target_link_libraries(ehal PUBLIC ehal-backward-comp)
-endif(EHAL_BACKWARD_COMPATIBILITY)
+#if(EHAL_BACKWARD_COMPATIBILITY)
+#	target_link_libraries(ehal PUBLIC ehal-backward-comp)
+#endif(EHAL_BACKWARD_COMPATIBILITY)
 
 set_target_properties(ehal PROPERTIES
 	PUBLIC_HEADER "inc/memmap-epiphany-cores.h;inc/loader/ehal_srec_loader.h"
