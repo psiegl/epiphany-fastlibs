@@ -341,7 +341,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
         eCoresWarn("ESYS_REGS_BASE not 4K page aligned: 0x%08x\n", base);
         base &= MASK_4K;
       }
-      cfg->esys_regs_base = (typeof(cfg->esys_regs_base))base;
+      cfg->esys_regs_base = (__typeof__(cfg->esys_regs_base))base;
       break;
     }
 
@@ -370,7 +370,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
         eCoresWarn("EMEM_EPI_BASE not 4K page aligned: 0x%08x\n", base);
         base &= MASK_4K;
       }
-      cfg->emem[0].epi_base = (typeof(cfg->emem[0].epi_base))base;
+      cfg->emem[0].epi_base = (__typeof__(cfg->emem[0].epi_base))base;
       break;
     }
 

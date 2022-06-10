@@ -213,15 +213,15 @@ int ee_soft_reset_core(eCoreMemMap_t* eCore)
 void reset()
 {
   ((eSysRegs*)0x808f0000)->esysreset = 0x0;
-  asm volatile("" ::: "memory");
+  __asm__ volatile("" ::: "memory");
   usleep(200000);
 
 	// Perform post-reset, platform specific operations
 //	if (e_platform.chip[0].type == E_E16G301) // TODO: assume one chip
 //	if ((e_platform.type == E_ZEDBOARD1601) || (e_platform.type == E_PARALLELLA1601))
-  typeof(&((eSysRegs*)0x808f0000)->esysconfig.reg) esysconfig = &((eSysRegs*)0x808f0000)->esysconfig.reg;
+  __typeof__(&((eSysRegs*)0x808f0000)->esysconfig.reg) esysconfig = &((eSysRegs*)0x808f0000)->esysconfig.reg;
   *esysconfig = 0x50000000;
-  asm volatile("" ::: "memory");
+  __asm__ volatile("" ::: "memory");
 
 // The register must be written, there shall be NO read beforehand. Otherwise stall!
 //                      E16G301               E64G301
@@ -232,7 +232,7 @@ void reset()
 
   //      LCLK Transmit Frequency control: Divide cclk by 0->2, 1->4, 2->8
   *elinkmodecfgEast = 1;
-  asm volatile("" ::: "memory");
+  __asm__ volatile("" ::: "memory");
   *esysconfig = 0x0;
 
 
@@ -240,7 +240,7 @@ void reset()
   // put individual cores into reset
   eCoreMemMap_t* eCoreBgn = &eCoresGMemBaseVA[32][8];
   eCoreBgn->regs.corereset.reset = 1;
-  asm volatile("" ::: "memory");
+  __asm__ volatile("" ::: "memory");
   eCoreBgn->regs.corereset.reset = 0;
 */
 }
@@ -248,7 +248,7 @@ void reset()
 
 void dump_mem(eCoreMemMap_t* eCoreBgn)
 {
-  typeof(eCoreBgn->sram[0])* s = eCoreBgn->sram;
+  __typeof__(eCoreBgn->sram[0])* s = eCoreBgn->sram;
   for( ; s < &eCoreBgn->sram[sizeof(eCoreBgn->sram)/sizeof(eCoreBgn->sram[0])]; ++s ) {
     
     if( ((uintptr_t)s) % (16 * sizeof(uint32_t)) == 0 ) {

@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+//#include <asm-generic/mman.h>
 #include "ehal-print.h"
 
 int load_file(const char *fname, unsigned extc, const char** ext,

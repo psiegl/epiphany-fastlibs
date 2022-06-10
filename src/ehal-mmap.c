@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
+//#include <asm-generic/mman.h>
 #include "ehal-mmap.h"
 #include "ehal-print.h"
 
@@ -98,7 +99,7 @@ int eCoreMunmap(eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
 }
 
 
-int eShmMmap(int fd, typeof(&((eConfig_t*)0x0)->emem[0]) emem)
+int eShmMmap(int fd, __typeof__(&((eConfig_t*)0x0)->emem[0]) emem)
 {
   assert( fd >= 0 );
   assert( emem );
@@ -146,7 +147,7 @@ int eShmMmap(int fd, typeof(&((eConfig_t*)0x0)->emem[0]) emem)
   return 0;
 }
 
-int eShmMunmap(typeof(&((eConfig_t*)0x0)->emem[0]) emem)
+int eShmMunmap(__typeof__(&((eConfig_t*)0x0)->emem[0]) emem)
 {
   assert( emem );
 

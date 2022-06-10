@@ -42,7 +42,7 @@ eConfig_t ecfg = {
 
 
 // needs to be run upfront a program run, otherwise the epiphany won't signal anything back
-void eEastLinkUp(typeof(&((eSysRegs*)0x0)->esysconfig.reg) esysconfig,
+void eEastLinkUp(__typeof__(&((eSysRegs*)0x0)->esysconfig.reg) esysconfig,
                  eCoresGMemMap eCoreRoot, eChip_t type)
 {
   assert( esysconfig );
@@ -53,7 +53,7 @@ void eEastLinkUp(typeof(&((eSysRegs*)0x0)->esysconfig.reg) esysconfig,
 //	  if ((e_platform.type == E_ZEDBOARD1601) || (e_platform.type == E_PARALLELLA1601))
     assert((ELINK_REG_MASK( ELINK_REG_EAST ) << 28) == 0x50000000);
     *esysconfig = ELINK_REG_MASK( ELINK_REG_EAST ) << 28;
-    asm volatile("" ::: "memory");
+    __asm__ volatile("" ::: "memory");
 
 // The register must be written, there shall be NO read beforehand. Otherwise stall!
 //                      E16G301               E64G301
@@ -64,7 +64,7 @@ void eEastLinkUp(typeof(&((eSysRegs*)0x0)->esysconfig.reg) esysconfig,
 
 //  LCLK Transmit Frequency control: Divide cclk by 0->2, 1->4, 2->8
     *elinkmodecfgEast = 1;
-    asm volatile("" ::: "memory");
+    __asm__ volatile("" ::: "memory");
     *esysconfig = 0x0;
   }
 }
@@ -73,7 +73,7 @@ void eEastLinkUp(typeof(&((eSysRegs*)0x0)->esysconfig.reg) esysconfig,
 void eCoresReset(void)
 {
   esysregs->esysreset = 0x0;
-  asm volatile("" ::: "memory");
+  __asm__ volatile("" ::: "memory");
   usleep(200000);
 
   eEastLinkUp(&esysregs->esysconfig.reg); // FIXME
@@ -126,7 +126,7 @@ int eCoresBootstrap(eConfig_t *ecfg)
   // The EPIPHANY FPGA regs visible by the Zynq, are mapped onto the [32, 8] eCore regs memory mapped page
   if(!eSysRegsMmap(ecfg->fd, ecfg->esys_regs_base)) {
     eSysRegs* esysregs = ecfg->esys_regs_base;
-    typeof(&ecfg->chip[0]) chip = &ecfg->chip[0];
+    __typeof__(&ecfg->chip[0]) chip = &ecfg->chip[0];
 
     // as the FPGA regs are now visible, we can check what configuration is given.
     // let us rather trust FPGA then HDF file
@@ -169,7 +169,7 @@ void eCoresFini(eConfig_t *ecfg)
 {
   eShmMunmap(&ecfg->emem[0]);
 
-  typeof(&ecfg->chip[0]) chip = &ecfg->chip[0];
+  __typeof__(&ecfg->chip[0]) chip = &ecfg->chip[0];
   eCoreMemMap_t* eCoreBgn = &chip->eCoreRoot[0][0];
   eCoreMemMap_t* eCoreEnd = &chip->eCoreRoot[chip->xyDim-1][chip->xyDim-1];
   eCoreMunmap(eCoreBgn, eCoreEnd);
@@ -314,7 +314,7 @@ static void init(void)
 
   eCoreMemMap_t* eCoreBgn = &ecfg.chip[0].eCoreRoot[0][0];
   eCoreMemMap_t* eCoreEnd = &ecfg.chip[0].eCoreRoot[ecfg.chip[0].xyDim-1][ecfg.chip[0].xyDim-1];
-  typeof(&ecfg.emem[0]) emem = &ecfg.emem[0];
+  __typeof__(&ecfg.emem[0]) emem = &ecfg.emem[0];
   printf("\n"
          "(c) BSD-2-Clause 2022 Dr.-Ing. Patrick Siegl\n"
          "\n"

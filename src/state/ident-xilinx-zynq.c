@@ -57,7 +57,7 @@ const char* xlxZynqDevice(int fd)
 
   uint32_t* slcr = mmap(NULL, 4096, PROT_READ, MAP_PRIVATE, fd, SLCR_BASE);
   if (slcr != MAP_FAILED) {
-    typeof(*slcr) idcode = slcr[PSS_IDCODE_OFFS / sizeof(*slcr)];
+    __typeof__(*slcr) idcode = slcr[PSS_IDCODE_OFFS / sizeof(*slcr)];
 
     munmap(slcr, 4096);
   
@@ -95,7 +95,7 @@ float xlxZynqSiliconRevision(int fd)
 
   uint32_t* devcfg = mmap(NULL, 4096, PROT_READ, MAP_PRIVATE, fd, DEVCFG_BASE);
   if (devcfg != MAP_FAILED) {
-    typeof(*devcfg) mctrl = devcfg[MCTRL_OFFS / sizeof(*devcfg)];
+    __typeof__(*devcfg) mctrl = devcfg[MCTRL_OFFS / sizeof(*devcfg)];
 
     munmap(devcfg, 4096);
   

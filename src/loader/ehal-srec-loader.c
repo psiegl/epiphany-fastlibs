@@ -9,8 +9,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/mman.h> 
 #include "memmap-epiphany-cores.h"
 #include "ehal-print.h"
 #include "loader/ehal-gen-file-loader.h"
@@ -200,7 +198,6 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
 #ifdef LCL_BUF
   char t[0xFF];
 #endif
-
   unsigned i, j;
   for(i = 0; i < srecPairs; ++i) {
     char ret = 0;
@@ -223,9 +220,9 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
 */
     uint32_t r, c;
 #if 0
-    for(r = (((uintptr_t)eCoreBgn) & MASK_ROWID);
+    for(uint32_t r = (((uintptr_t)eCoreBgn) & MASK_ROWID);
         r <= (((uintptr_t)eCoreEnd) & MASK_ROWID); r += INCR_ROWID) {
-      for(c = (((uintptr_t)eCoreBgn) & MASK_COLID);
+      for(uint32_t c = (((uintptr_t)eCoreBgn) & MASK_COLID);
           c <= (((uintptr_t)eCoreEnd) & MASK_COLID); c += INCR_COLID) {
         uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
         //printf("[%2d,%2d] eAddr: %08x  %p\n", ECORE_ADDR_ROWID( eAddr ), ECORE_ADDR_COLID( eAddr ), eAddr, &((char*)addr)[i]);
