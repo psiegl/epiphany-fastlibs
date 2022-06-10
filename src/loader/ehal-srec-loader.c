@@ -92,6 +92,98 @@ int srecPairsToBytes(unsigned char* bytesOut,
   return 0;
 }
 
+#define EMEMCPY 1
+#define ALIGNMENT sizeof(uint32_t)   // EPIPHANY reads 32 bit
+#define MIN(a, b) (a > b ? a : b)
+
+inline void ememcpy(void *dest, const void *src, size_t n)
+{
+  /*
+    dest
+    |<-            n            ->|
+    |<- b_n ->|<- a_n ->|<- e_n ->|
+              b_dest    e_dest
+  */
+  uintptr_t ob_dest = (uintptr_t)dest;
+  uintptr_t b_dest = ob_dest, e_dest = ob_dest + n;
+
+  // round up
+  b_dest += (uintptr_t)(ALIGNMENT-1);
+  b_dest &= ~(uintptr_t)(ALIGNMENT-1);
+  /*
+    best case
+    dest
+    |<-            n            ->|
+    |<- b_n ->|
+              b_dest
+
+    worst case
+    dest
+    |<-n->|                     -> b_n = n
+    |<-     ->|
+              b_dest
+  */
+  size_t b_n = MIN(b_dest - ob_dest, n);
+
+  // round down
+  e_dest &= ~(uintptr_t)(ALIGNMENT-1);
+  /*
+    best case 
+    dest
+    |<-            n            ->|
+    |<- b_n ->|<- a_n ->|
+              b_dest    e_dest
+
+    worst case (1)
+    b_n is part of n
+    dest
+    |<-    n    ->|             -> a_n = n - b_n
+    |<- b_n ->|<-     ->|
+              b_dest    e_dest
+
+    worst case (2)
+    b_n is n
+    dest
+    |<-  n  ->|                 -> a_n = n - b_n = 0
+    |<- b_n ->|<-     ->|
+              b_dest    e_dest
+  */
+  size_t a_n = MIN(e_dest - ob_dest, n) - b_n;
+
+  /*
+    best case
+    dest
+    |<-            n            ->|
+    |<- b_n ->|<- a_n ->|<- e_n ->|
+              b_dest    e_dest
+
+    worst case
+    dest
+    |<-       n       ->|       -> e_n = 0
+    |<- b_n ->|<- a_n ->|
+              b_dest    e_dest
+  */
+  size_t e_n = n - b_n - a_n;
+
+  char *c_dest = (char*)dest;
+  char *c_src = (char*)src;
+
+  while( b_n-- )
+    *(c_dest++) = *(c_src++);
+
+#ifdef __builtin_memcpy_inline
+  __builtin_memcpy_inline(c_dest, c_src, a_n);
+#else
+  memcpy(c_dest, c_src, a_n);
+#endif
+  c_dest += a_n;
+  c_src += a_n;
+
+  while( e_n-- )
+    *(c_dest++) = *(c_src++);
+}
+
+
 // Count, Data and Checksum bytes are used from pairs
 // (input is formated into host endianness likel little endian)
 int srecPairsToBytes_eCoreLocal(unsigned char* addr,
@@ -119,9 +211,7 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     *chksum += ret;
 #ifdef LCL_BUF
     t[i] = ret;
-#endif
-
-#ifndef LCL_BUF
+#else
     uint32_t MASK_ROWID = 0xFC000000; // FIXME: cleanup
     uint32_t INCR_ROWID = 0x04000000;
     uint32_t MASK_COLID = 0x03F00000;
@@ -168,9 +258,13 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     for(c = (((uintptr_t)eCoreEnd) & MASK_COLID);
         c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
 
+#ifdef EMEMCPY
+      uintptr_t eAddr = r | c | (uintptr_t)&addr[0];
+      ememcpy((uintptr_t*)eAddr, t, srecPairs);
+#else
       if(!((uintptr_t)addr % sizeof(uint32_t)) // EPIPHANY reads 32bit
 /*         && !(srecPairs % sizeof(uint32_t)) */) {
-        uintptr_t eAddr = r | c | (uintptr_t)addr;
+        uintptr_t eAddr = r | c | (uintptr_t)&addr[0];
         memcpy((char*)eAddr, t, srecPairs);
       }
       else {
@@ -185,6 +279,7 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
           *(unsigned char*)eAddr = t[i];
         }
       }
+#endif /* EMEMCPY */
 
     }
   }
@@ -213,7 +308,6 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
 typedef struct {
   eCoreMemMap_t* eCoreBgn;
   eCoreMemMap_t* eCoreEnd;
-  
 } eCores;
 
 //int parse_srec(unsigned char *srecBgn, unsigned char *srecEnd,
