@@ -2,9 +2,8 @@ cmake_minimum_required(VERSION 2.8.12.2)
 project( ehal )
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Adapteva EPIPHANY efficient HAL")
 set(CPACK_PACKAGE_VERSION 0.1.0)
-set(CMAKE_C_STANDARD 11)
 
-set(CMAKE_C_FLAGS "-Ofast")
+set(CMAKE_C_FLAGS "-std=c11 -Ofast")
 
 execute_process(COMMAND uname -m OUTPUT_VARIABLE UNAME_MACHINE)
 if(${UNAME_MACHINE} MATCHES "armv7l")

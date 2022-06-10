@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
-//#include <asm-generic/mman.h>
+#include <asm-generic/mman.h> /* MAP_LOCKED */
 #include "ehal-mmap.h"
 #include "ehal-print.h"
 
