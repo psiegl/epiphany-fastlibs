@@ -55,9 +55,8 @@ int srecGroupToBytes(uintptr_t* bytesOut,
   assert(srecPairCharIn);
   assert(chksum);
 
-  unsigned i;
   uintptr_t ret = 0;
-  for(i = 0; i < srecBytes; ++i) {
+  for(unsigned i = 0; i < srecBytes; ++i) {
     unsigned char c = srecPairCharIn[i];
     SWITCH_HEX( c, ret ); // contains return -1!
   }
@@ -77,10 +76,9 @@ int srecPairsToBytes(unsigned char* bytesOut,
   assert(srecPairCharIn);
   assert(chksum);
 
-  unsigned i, j;
-  for(i = 0; i < srecPairs; ++i) {
+  for(unsigned i = 0; i < srecPairs; ++i) {
     char ret = 0;
-    for(j = 0; j < 2; ++j) {
+    for(unsigned j = 0; j < 2; ++j) {
       unsigned char c = srecPairCharIn[(i << 1) + j];
       SWITCH_HEX( c, ret ); // contains return -1!
     }
@@ -198,10 +196,9 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
 #ifdef LCL_BUF
   char t[0xFF];
 #endif
-  unsigned i, j;
-  for(i = 0; i < srecPairs; ++i) {
+  for(unsigned i = 0; i < srecPairs; ++i) {
     char ret = 0;
-    for(j = 0; j < 2; ++j) {
+    for(unsigned j = 0; j < 2; ++j) {
       unsigned char c = srecPairCharIn[(i << 1) + j];
       SWITCH_HEX( c, ret ); // contains return -1!
     }
@@ -218,7 +215,6 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     epiphany_arch_ref.pdf, REV 14.03.11 page 27
     eMesh -> Maximum bandwidth is obtained with double word transactions.
 */
-    uint32_t r, c;
 #if 0
     for(uint32_t r = (((uintptr_t)eCoreBgn) & MASK_ROWID);
         r <= (((uintptr_t)eCoreEnd) & MASK_ROWID); r += INCR_ROWID) {
@@ -231,9 +227,9 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     }
 #else
     // in theory it could be faster to first fill the far eCores
-    for(r = (((uintptr_t)eCoreEnd) & MASK_ROWID);
+    for(uint32_t r = (((uintptr_t)eCoreEnd) & MASK_ROWID);
         r >= (((uintptr_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
-      for(c = (((uintptr_t)eCoreEnd) & MASK_COLID);
+      for(uint32_t c = (((uintptr_t)eCoreEnd) & MASK_COLID);
           c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
         uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
         //printf("[%2d,%2d] eAddr: %08x (%p, %d) write %x\n", ECORE_ADDR_ROWID( eAddr ), ECORE_ADDR_COLID( eAddr ), eAddr, &((char*)addr)[i], i, ret);
@@ -249,10 +245,9 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
   uint32_t INCR_ROWID = 0x04000000;
   uint32_t MASK_COLID = 0x03F00000;
   uint32_t INCR_COLID = 0x00100000;
-  uint32_t r, c;
-  for(r = (((uintptr_t)eCoreEnd) & MASK_ROWID);
+  for(uint32_t r = (((uintptr_t)eCoreEnd) & MASK_ROWID);
       r >= (((uintptr_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
-    for(c = (((uintptr_t)eCoreEnd) & MASK_COLID);
+    for(uint32_t c = (((uintptr_t)eCoreEnd) & MASK_COLID);
         c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
 
 #ifdef EMEMCPY
@@ -266,7 +261,7 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
       }
       else {
 //        printf("!! %p %d\n", addr, srecPairs);
-        for(i = 0; i < srecPairs; ++i) {
+        for(unsigned i = 0; i < srecPairs; ++i) {
           uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
           if(! (((uintptr_t)&addr[i]) % sizeof(uint32_t))) { // EPIPHANY reads 32bit
 //            printf("%p %p %d\n", &addr[i], &t[i], srecPairs - i );

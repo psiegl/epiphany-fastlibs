@@ -107,15 +107,15 @@ int eCoresBootstrap(eConfig_t *ecfg)
     { -1, "/dev/mem" }
   };
 
-  unsigned i, edevc = elemsof(edev);
-  for(i=0; i<edevc; ++i) {
+  unsigned edevc = elemsof(edev);
+  for(unsigned i=0; i<edevc; ++i) {
     if((ecfg->fd = open(edev[i].dev, O_RDWR|O_SYNC|O_EXCL)) != -1) // TODO: check if file ...
       break;
     edev[i].err = errno;
   }
   if(ecfg->fd == -1) {
     eCoresError("Could not open EPIPHANY!, tried:\n");
-    for(i=0; i<edevc; ++i)
+    for(unsigned i=0; i<edevc; ++i)
       eCoresError("    '%s' (%s)\n", edev[i].dev, strerror(edev[i].err));
     eCoresError("Cleaning up...\n");
     return -1;
