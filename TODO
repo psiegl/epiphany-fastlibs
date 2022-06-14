@@ -1,0 +1,11 @@
+
+
+ARM PL330:
+* https://github.com/Xilinx/linux-xlnx/blob/master/Documentation/devicetree/bindings/dma/arm-pl330.txt
+* 
+https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/18842418/Linux+DMA+From+User+Space
+* 
+https://ieeexplore.ieee.org/document/7808147
+* 
+https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/18842220/Zynq+Linux+pl330+DMA
+
