@@ -45,7 +45,7 @@ int load_file(const char *fname, unsigned extc, const char** ext,
     if( fstat(fd, &s) >= 0 ) {
       size_t size = s.st_size;
 
-      eCoresPrintf(E_DBG, "Opened file %s with size %d\n", fname, size);  
+      eCoresPrintf(E_DBG, "Opened file %s with %s\n", fname, fmtBytes(size));
       // TODO: check if file is too huge to read at one shot ...
       
       unsigned char *mappedFile;

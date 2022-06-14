@@ -53,7 +53,7 @@ static char *fmtBytes(unsigned bytes)
   static char o[8];
   if (bytes >> 10)
     for ( ; bytes >> 10 && b < e; ++b, bytes >>= 10);
-  sprintf(o, "%4d %cB", bytes, *b);
+  sprintf(o, "%d %cB", bytes, *b);
   return o;
 }
 

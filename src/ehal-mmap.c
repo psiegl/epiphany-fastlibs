@@ -35,12 +35,12 @@ int _eCoreMmap(int fd, eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMe
   void *ebank = mmap(eCoreCur->bank, sizeof(eCoreCur->bank), PROT_READ|PROT_WRITE, flags, fd, (off_t)eCoreCur->bank);
   assert(ebank == eCoreCur->bank);
   if(ebank != MAP_FAILED) {
-    eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%s) - eCore bank\n", eCoreCur->bank, eCoreCur->bank, fmtBytes(sizeof(eCoreCur->bank)) );
+    eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%7s) - eCore bank\n", eCoreCur->bank, eCoreCur->bank, fmtBytes(sizeof(eCoreCur->bank)) );
 
     void *eregs = mmap(&eCoreCur->regs, sizeof(eCoreCur->regs), PROT_READ|PROT_WRITE, flags, fd, (off_t)&eCoreCur->regs);
     assert(eregs == &eCoreCur->regs);
     if(eregs != MAP_FAILED) {
-      eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%s) - eCore regs\n", &eCoreCur->regs, &eCoreCur->regs, fmtBytes(sizeof(eCoreCur->regs)) );
+      eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%7s) - eCore regs\n", &eCoreCur->regs, &eCoreCur->regs, fmtBytes(sizeof(eCoreCur->regs)) );
 
       int isColEnd = ECORE_ADDR_COLID(eCoreCur) < ECORE_ADDR_COLID(eCoreEnd);
       if(!_eCoreMmap(fd, isColEnd ? eCoreCur + 1
@@ -142,7 +142,7 @@ int eShmMmap(int fd, __typeof__(&((eConfig_t*)0x0)->emem[0]) emem)
                madvHugepage ? ")" : "" );
 #endif
   
-  eCorePrintf(E_DBG, eshm, "VA %p, PA %p (%s) - Zynq <-> eCores shm\n", eshm, (void*)emem->base_address, fmtBytes(emem->size) );
+  eCorePrintf(E_DBG, eshm, "VA %p, PA %p (%7s) - Zynq <-> eCores shm\n", eshm, (void*)emem->base_address, fmtBytes(emem->size) );
 
   return 0;
 }
@@ -171,7 +171,7 @@ int eSysRegsMmap(int fd, eSysRegs* esys_regs_base)
   eSysRegs* esysregs = (eSysRegs*) mmap(esys_regs_base, sizeof(eSysRegs), PROT_READ|PROT_WRITE, flags, fd, (off_t)esys_regs_base );
   assert(esysregs == esys_regs_base);
   if(esysregs != MAP_FAILED) {
-    eCoresPrintf(E_DBG, "VA %p, PA %p (%s) - eCores FPGA regs\n",
+    eCoresPrintf(E_DBG, "VA %p, PA %p (%7s) - eCores FPGA regs\n",
                  esys_regs_base, esys_regs_base, fmtBytes(sizeof(eSysRegs)) );
     return 0;
   }
