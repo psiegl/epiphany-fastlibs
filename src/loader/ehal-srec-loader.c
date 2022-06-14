@@ -340,6 +340,7 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
       {
         // ----------- calc. lenghts and pointers
         if(countBytes < (ADDR_16bit__BYTES + CHKSUM__BYTES)) {
+          eCoresError("countBytes wrong\n"); 
           return -1;
         }
         unsigned dataBytes = countBytes - ADDR_16bit__BYTES - CHKSUM__BYTES;
@@ -379,6 +380,7 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
         unsigned addr__srecBytes = addrBytes << 1;
 
         if(countBytes < (addrBytes + CHKSUM__BYTES)) {
+          eCoresError("countBytes wrong\n"); 
           return -1;
         }
         unsigned dataBytes = countBytes - addrBytes - CHKSUM__BYTES;
@@ -438,6 +440,7 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
         unsigned addr__srecBytes = addrBytes << 1;
 
         if(countBytes != (addrBytes + CHKSUM__BYTES)) {
+          eCoresError("countBytes wrong\n"); 
           return -1;
         }
         srecBgn = srecAddr + addr__srecBytes;
@@ -464,6 +467,7 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
         unsigned data__srecBytes = dataBytes << 1;
 
         if(countBytes != (dataBytes + CHKSUM__BYTES)) {
+          eCoresError("countBytes wrong\n"); 
           return -1;
         }
         srecBgn = srecAddr + data__srecBytes;
