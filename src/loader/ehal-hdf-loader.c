@@ -126,7 +126,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
 #ifdef NORDX
     while(*c == ' ') ++c; // skip zeros
 
-    sscanf(c, "%s", key);
+    sscanf((const char*)c, "%s", key);
     unsigned len = strlen(key);
 
     hdfKey_t ekey = HDF_INVALID;
@@ -263,7 +263,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
     switch(ekey) {
     case HDF_CHIP:
     {
-      if(sscanf(c, "E%2dG%1d%2d", &eCores, &gen, &version) == 3) {
+      if(sscanf((const char*)c, "E%2dG%1d%2d", &eCores, &gen, &version) == 3) {
         switch(eCores << 16 | gen << 8 | version) {
         case 16 << 16 | 3 << 8 | 1:
           cfg->chip[0].xyDim = 4;
@@ -281,32 +281,32 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
     }
     case HDF_EMEM:
       assert(sizeof(emem) == 10);
-      sscanf(c, "%10s", emem);
+      sscanf((const char*)c, "%10s", emem);
       break;
 
     case HDF_PLATFORM_VERSION:
       assert(sizeof(platform_version) == 20);
-      sscanf(c, "%20s", platform_version);
+      sscanf((const char*)c, "%20s", platform_version);
       break;
 
     case HDF_NUM_CHIPS:
-      sscanf(c, "%d", &cfg->num_chips);
+      sscanf((const char*)c, "%d", &cfg->num_chips);
       break;
 
     case HDF_NUM_EXT_MEMS:
-      sscanf(c, "%d", &cfg->num_ext_mems);
+      sscanf((const char*)c, "%d", &cfg->num_ext_mems);
       break;
 
     case HDF_EMEM_TYPE:
-      if(!strncmp(c, "RD", 2)) {
+      if(!strncmp((const char*)c, "RD", 2)) {
         cfg->emem[0].prot = PROT_READ;
-        if(!strncmp(c + 2, "WR", 2))
+        if(!strncmp((const char*)c + 2, "WR", 2))
           cfg->emem[0].prot |= PROT_WRITE;
         break;
       }
-      else if(!strncmp(c, "WR", 2)) {
+      else if(!strncmp((const char*)c, "WR", 2)) {
         cfg->emem[0].prot = PROT_WRITE;
-        if(!strncmp(c + 2, "RD", 2))
+        if(!strncmp((const char*)c + 2, "RD", 2))
           cfg->emem[0].prot |= PROT_READ;
         break;
       }
@@ -317,7 +317,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
     case HDF_CHIP_ROW:
     {
       int row;
-      if(sscanf(c, "%d", &row) == 1)
+      if(sscanf((const char*)c, "%d", &row) == 1)
         cfg->chip[0].eCoreRoot = &cfg->chip[0].eCoreRoot[row];
       break;
     }
@@ -325,7 +325,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
     case HDF_CHIP_COL:
     {
       int col;
-      if(sscanf(c, "%d", &col) == 1)
+      if(sscanf((const char*)c, "%d", &col) == 1)
         cfg->chip[0].eCoreRoot = (eCoresGMemMap)&cfg->chip[0].eCoreRoot[0][col];
       break;
     }
@@ -336,7 +336,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
 //      char *endp; // TODO: check error
 //      uintptr_t base = strtoul(value, &endp, 16);
       uintptr_t base;
-      sscanf(c, "%p", (void**)&base);
+      sscanf((const char*)c, "%p", (void**)&base);
       if(base & ~MASK_4K) {
         eCoresWarn("ESYS_REGS_BASE not 4K page aligned: 0x%08x\n", base);
         base &= MASK_4K;
@@ -350,7 +350,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
 //      sscanf(c, "%s", value);
 //      char *endp; // TODO: check error
 //      cfg->emem[0].base_address = strtoul(value, &endp, 16);
-      sscanf(c, "%p", (void**)&cfg->emem[0].base_address);
+      sscanf((const char*)c, "%p", (void**)&cfg->emem[0].base_address);
       if(cfg->emem[0].base_address & ~MASK_4K) {
         eCoresWarn("EMEM_BASE_ADDRESS not 4K page aligned: 0x%08x\n",
                 cfg->emem[0].base_address);
@@ -361,11 +361,11 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
 
     case HDF_EMEM_EPI_BASE:
     {
-//      sscanf(c, "%s", value);
+//      sscanf((const char*)c, "%s", value);
 //      char *endp; // TODO: check error
 //      uintptr_t base = strtoul(value, &endp, 16);
       uintptr_t base;
-      sscanf(c, "%p", (void**)&base);
+      sscanf((const char*)c, "%p", (void**)&base);
       if(base & ~MASK_4K) {
         eCoresWarn("EMEM_EPI_BASE not 4K page aligned: 0x%08x\n", base);
         base &= MASK_4K;
@@ -376,10 +376,10 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
 
     case HDF_EMEM_SIZE:
     {
-//      sscanf(c, "%s", value);
+//      sscanf((const char*)c, "%s", value);
 //      char *endp; // TODO: check error
 //      cfg->emem[0].size = strtoul(value, &endp, 16);
-      sscanf(c, "%p", (void**)&cfg->emem[0].size);
+      sscanf((const char*)c, "%p", (void**)&cfg->emem[0].size);
       if(cfg->emem[0].size & ~MASK_4K) {
         eCoresWarn("EMEM_SIZE not 4K page aligned: 0x%08x\n",
                 cfg->emem[0].size);
