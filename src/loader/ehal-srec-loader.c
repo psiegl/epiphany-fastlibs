@@ -181,7 +181,7 @@ inline void ememcpy(void *dest, const void *src, size_t n)
 
 
 // Count, Data and Checksum bytes are used from pairs
-// (input is formated into host endianness likel little endian)
+// (input is formated into host endianness like little endian)
 int srecPairsToBytes_eCoreLocal(unsigned char* addr,
                                 eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd,
                                 unsigned char *srecPairCharIn, unsigned srecPairs,
@@ -192,55 +192,35 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
   assert(srecPairCharIn);
   assert(chksum);
 
-#define LCL_BUF
-#ifdef LCL_BUF
-  char t[0xFF];
-#endif
+  char buf[0xFF];
   for(unsigned i = 0; i < srecPairs; ++i) {
     char ret = 0;
     for(unsigned j = 0; j < 2; ++j) {
       unsigned char c = srecPairCharIn[(i << 1) + j];
       SWITCH_HEX( c, ret ); // contains return -1!
     }
+    buf[i] = ret;
     *chksum += ret;
-#ifdef LCL_BUF
-    t[i] = ret;
-#else
-    uint32_t MASK_ROWID = 0xFC000000; // FIXME: cleanup
-    uint32_t INCR_ROWID = 0x04000000;
-    uint32_t MASK_COLID = 0x03F00000;
-    uint32_t INCR_COLID = 0x00100000;
+  }
 
+#if 0
+  unsigned nonZero = 0;
+      unsigned s;
+      for(s = 0; s < srecPairs; s++)
+        nonZero += buf[s];
+
+  if(nonZero) {
+    printf("addr: %p |", addr);
+      unsigned s;
+      for(s = 0; s < srecPairs; s++)
+        printf(" %02x", buf[s]);
+    printf("\n");
+  }
+#endif
 /*
     epiphany_arch_ref.pdf, REV 14.03.11 page 27
     eMesh -> Maximum bandwidth is obtained with double word transactions.
 */
-#if 0
-    for(uint32_t r = (((uintptr_t)eCoreBgn) & MASK_ROWID);
-        r <= (((uintptr_t)eCoreEnd) & MASK_ROWID); r += INCR_ROWID) {
-      for(uint32_t c = (((uintptr_t)eCoreBgn) & MASK_COLID);
-          c <= (((uintptr_t)eCoreEnd) & MASK_COLID); c += INCR_COLID) {
-        uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
-        //printf("[%2d,%2d] eAddr: %08x  %p\n", ECORE_ADDR_ROWID( eAddr ), ECORE_ADDR_COLID( eAddr ), eAddr, &((char*)addr)[i]);
-        *(unsigned char*)eAddr = ret;
-      }
-    }
-#else
-    // in theory it could be faster to first fill the far eCores
-    for(uint32_t r = (((uintptr_t)eCoreEnd) & MASK_ROWID);
-        r >= (((uintptr_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
-      for(uint32_t c = (((uintptr_t)eCoreEnd) & MASK_COLID);
-          c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
-        uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
-        //printf("[%2d,%2d] eAddr: %08x (%p, %d) write %x\n", ECORE_ADDR_ROWID( eAddr ), ECORE_ADDR_COLID( eAddr ), eAddr, &((char*)addr)[i], i, ret);
-        *(unsigned char*)eAddr = ret;
-      }
-    }
-#endif
-#endif
-  }
-
-#ifdef LCL_BUF // use ECORE_NEXT
   uint32_t MASK_ROWID = 0xFC000000;
   uint32_t INCR_ROWID = 0x04000000;
   uint32_t MASK_COLID = 0x03F00000;
@@ -250,32 +230,16 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     for(uint32_t c = (((uintptr_t)eCoreEnd) & MASK_COLID);
         c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
 
-#ifdef EMEMCPY
-      uintptr_t eAddr = r | c | (uintptr_t)&addr[0];
-      ememcpy((uintptr_t*)eAddr, t, srecPairs);
-#else
-      if(!((uintptr_t)addr % sizeof(uint32_t)) // EPIPHANY reads 32bit
-/*         && !(srecPairs % sizeof(uint32_t)) */) {
-        uintptr_t eAddr = r | c | (uintptr_t)&addr[0];
-        memcpy((char*)eAddr, t, srecPairs);
-      }
-      else {
-//        printf("!! %p %d\n", addr, srecPairs);
-        for(unsigned i = 0; i < srecPairs; ++i) {
-          uintptr_t eAddr = r | c | (uintptr_t)&addr[i];
-          if(! (((uintptr_t)&addr[i]) % sizeof(uint32_t))) { // EPIPHANY reads 32bit
-//            printf("%p %p %d\n", &addr[i], &t[i], srecPairs - i );
-            memcpy((uintptr_t*)eAddr, &t[i], srecPairs - i);
-            break;
-          }
-          *(unsigned char*)eAddr = t[i];
-        }
-      }
-#endif /* EMEMCPY */
 
+      unsigned s;
+      for(s = 0; s < srecPairs; s++)
+        *(char*)(r | c | (uintptr_t)&addr[s]) = buf[s];
+
+//      uintptr_t eAddr = r | c | (uintptr_t)&addr[0];
+//      memcpy((uintptr_t*)eAddr, buf, srecPairs);
     }
   }
-#endif
+
 
   return 0;
 }
