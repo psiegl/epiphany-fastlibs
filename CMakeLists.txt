@@ -3,7 +3,7 @@ project( ehal )
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Adapteva EPIPHANY efficient HAL")
 set(CPACK_PACKAGE_VERSION 0.1.0)
 
-set(CMAKE_C_FLAGS "-std=c11 -Ofast")
+set(CMAKE_C_FLAGS "-std=c11 -Ofast -Wall -Wextra")
 
 execute_process(COMMAND uname -m OUTPUT_VARIABLE UNAME_MACHINE)
 if(${UNAME_MACHINE} MATCHES "armv7l")

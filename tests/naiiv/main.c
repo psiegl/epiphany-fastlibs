@@ -285,20 +285,20 @@ int main(int argc, char* argv[])
   eCoreBgn += ECORE_NEXT( 32, 8 );
   assert(eCoreBgn == (void*)0x80800000);
   
-  const char *srectest =  "S0110000655F736569736D69632E7372656362\r\n"
-                          "S30900000000E82C0000E2\r\n"
-                          "S3150000002800000000000000000000000000000000C2\r\n"
-                          "S3150000003800000000000000000000000000000000B2\r\n"
-                          "S30D000000480000000000000000AA\r\n"
-                          "S30D000000500000000000000000A2\r\n"
-                          "S311000000580B6EE2000B600210520D00005F\r\n"
-                          
-                          "S30D00001278430000000000000025\r\n";
+  const char *srecbgn = "S0110000655F736569736D69632E7372656362\r\n"
+                        "S30900000000E82C0000E2\r\n"
+                        "S3150000002800000000000000000000000000000000C2\r\n"
+                        "S3150000003800000000000000000000000000000000B2\r\n"
+                        "S30D000000480000000000000000AA\r\n"
+                        "S30D000000500000000000000000A2\r\n"
+                        "S311000000580B6EE2000B600210520D00005F\r\n"
 
-  printf("%s\n", srectest);
+                        "S30D00001278430000000000000025\r\n";
+  char* srecend = (char*)srecbgn + strlen(srecbgn);
+  printf("%s\n", srecbgn);
 
   memset( (char*)eCoreBgn->sram, 0, 0x8000 );
-  int ret = MEASURE("parse_srec", parse_srec(srectest, srectest + strlen(srectest),
+  int ret = MEASURE("parse_srec", parse_srec(srecbgn, srecend,
                                   eCoreBgn, eCoreBgn));
   printf("%d\n", ret);
   printf("--> 80800058 %x\n", *(uint32_t*)0x80800058);

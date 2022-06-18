@@ -32,10 +32,10 @@ int _eCoreMmap(int fd, eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMe
 #else
   flags |= MAP_SHARED;
 #endif    
-  void *ebank = mmap(eCoreCur->bank, sizeof(eCoreCur->bank), PROT_READ|PROT_WRITE, flags, fd, (off_t)eCoreCur->bank);
-  assert(ebank == eCoreCur->bank);
-  if(ebank != MAP_FAILED) {
-    eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%7s) - eCore bank\n", eCoreCur->bank, eCoreCur->bank, fmtBytes(sizeof(eCoreCur->bank)) );
+  void *esram = mmap((char*)&eCoreCur->sram[0], sizeof(eCoreCur->sram), PROT_READ|PROT_WRITE, flags, fd, (off_t)&eCoreCur->sram[0]);
+  assert(esram == eCoreCur->sram);
+  if(esram != MAP_FAILED) {
+    eCorePrintf(E_DBG, eCoreCur, "VA %p, PA %p (%7s) - eCore sram\n", eCoreCur->sram, eCoreCur->sram, fmtBytes(sizeof(eCoreCur->sram)) );
 
     void *eregs = mmap(&eCoreCur->regs, sizeof(eCoreCur->regs), PROT_READ|PROT_WRITE, flags, fd, (off_t)&eCoreCur->regs);
     assert(eregs == &eCoreCur->regs);
@@ -55,7 +55,7 @@ int _eCoreMmap(int fd, eCoreMemMap_t* eCoreCur, eCoreMemMap_t* eCoreBgn, eCoreMe
     else
       eCoreError(eCoreCur, "mmap for %p regs %p failed (errno %d, %s)! Cleaning up...\n", eCoreCur, &eCoreCur->regs, errno, strerror(errno));
 
-    munmap(ebank, sizeof(eCoreCur->bank));
+    munmap(esram, sizeof(eCoreCur->sram));
   }
   else
     eCoreError(eCoreCur, "mmap for %p bank %p failed (errno %d, %s)! Cleaning up...\n", eCoreCur, eCoreCur->bank, errno, strerror(errno));

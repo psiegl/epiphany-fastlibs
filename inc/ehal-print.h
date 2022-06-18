@@ -47,7 +47,7 @@ extern unsigned eloglevel;
 
 #define elemsof( x ) (sizeof(x)/sizeof(x[0]))
 
-static char *fmtBytes(unsigned bytes)
+inline static char *fmtBytes(unsigned bytes)
 {
   const char unit[] = {' ', 'K', 'M', 'G'}, *b = unit, *e = &unit[elemsof(unit)-1];
   static char o[8];

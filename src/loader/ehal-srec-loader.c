@@ -203,20 +203,6 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     *chksum += ret;
   }
 
-#if 0
-  unsigned nonZero = 0;
-      unsigned s;
-      for(s = 0; s < srecPairs; s++)
-        nonZero += buf[s];
-
-  if(nonZero) {
-    printf("addr: %p |", addr);
-      unsigned s;
-      for(s = 0; s < srecPairs; s++)
-        printf(" %02x", buf[s]);
-    printf("\n");
-  }
-#endif
 /*
     epiphany_arch_ref.pdf, REV 14.03.11 page 27
     eMesh -> Maximum bandwidth is obtained with double word transactions.
@@ -230,13 +216,18 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     for(uint32_t c = (((uintptr_t)eCoreEnd) & MASK_COLID);
         c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
 
-
+#if 0
       unsigned s;
-      for(s = 0; s < srecPairs; s++)
-        *(char*)(r | c | (uintptr_t)&addr[s]) = buf[s];
-
-//      uintptr_t eAddr = r | c | (uintptr_t)&addr[0];
-//      memcpy((uintptr_t*)eAddr, buf, srecPairs);
+      for(s = 0; s < srecPairs; s++) {
+        //*(volatile char*)(r | c | (uintptr_t)&addr[s]) = buf[s];
+        ((volatile char*)(r | c | (uintptr_t)addr))[s] = buf[s];
+        //if((char*)(r | c | (uintptr_t)&addr[s]) != &((char*)(r | c | (uintptr_t)addr))[s])
+        //  printf("not the same!\n");
+      }
+#else
+      uintptr_t eAddr = r | c | (uintptr_t)addr;
+      memcpy((volatile char*)eAddr, buf, srecPairs);
+#endif
     }
   }
 
