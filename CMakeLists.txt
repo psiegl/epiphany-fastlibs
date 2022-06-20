@@ -4,6 +4,7 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Adapteva EPIPHANY efficient HAL")
 set(CPACK_PACKAGE_VERSION 0.1.0)
 
 set(CMAKE_C_FLAGS "-std=c11 -Ofast -Wall -Wextra")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage -lgcov -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 
 execute_process(COMMAND uname -m OUTPUT_VARIABLE UNAME_MACHINE)
 if(${UNAME_MACHINE} MATCHES "armv7l")
@@ -57,6 +58,7 @@ set_target_properties(ehal PROPERTIES
 	PUBLIC_HEADER "inc/memmap-epiphany-cores.h;inc/loader/ehal_srec_loader.h"
 )
 #set_target_properties(ehal PROPERTIES VERSION ${PROJECT_VERSION})
+
 
 install(TARGETS ehal
 	LIBRARY DESTINATION /usr/lib

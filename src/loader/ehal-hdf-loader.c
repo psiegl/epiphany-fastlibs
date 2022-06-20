@@ -113,8 +113,8 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
   cfg->emem[0].prot = PROT_NONE;
 
   int eCores = 0, gen = 0, version = 0;
-  unsigned char platform_version[20] = { '\0' };
-  unsigned char emem[10] = { '\0' };
+  unsigned char platform_version[21] = { '\0' };
+  unsigned char emem[11] = { '\0' };
 
   unsigned char *c = fileBgn;
 #ifdef NORDX
@@ -280,12 +280,12 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
       break;
     }
     case HDF_EMEM:
-      assert(sizeof(emem) == 10);
+      assert(sizeof(emem) == 11);
       sscanf((const char*)c, "%10s", emem);
       break;
 
     case HDF_PLATFORM_VERSION:
-      assert(sizeof(platform_version) == 20);
+      assert(sizeof(platform_version) == 21);
       sscanf((const char*)c, "%20s", platform_version);
       break;
 

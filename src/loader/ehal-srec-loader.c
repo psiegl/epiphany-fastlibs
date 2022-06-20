@@ -88,7 +88,7 @@ int srecPairsToBytes(unsigned char* bytesOut,
   return 0;
 }
 
-#define EMEMCPY 1
+#if 0
 #define ALIGNMENT sizeof(uint32_t)   // EPIPHANY reads 32 bit
 #define MIN(a, b) (a > b ? a : b)
 
@@ -178,7 +178,7 @@ inline void ememcpy(void *dest, const void *src, size_t n)
   while( e_n-- )
     *(c_dest++) = *(c_src++);
 }
-
+#endif
 
 // Count, Data and Checksum bytes are used from pairs
 // (input is formated into host endianness like little endian)

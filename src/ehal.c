@@ -353,7 +353,7 @@ static void init(void)
          init_us, (init_us * 667 /* MHz -> Zynq frequency */)/1000 );
 }
 
-__attribute__((destructor (101))) /* prios 0-100 are preserved */
+__attribute__((destructor /*(101)*/)) /* prios 0-100 are preserved */
 static void fini(void)
 {
   eCoresFini(&ecfg);

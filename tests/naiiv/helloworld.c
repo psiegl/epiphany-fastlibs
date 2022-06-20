@@ -47,6 +47,20 @@ S3150000067012C17C170124FC5601247CD60124FC15EA
 S3150000068001847C550184FC9401847CD40184FC178C
 S3150000069000A47C5700A4920312217A24022192011D
 S315000006A08B0802000B2802000B2002100B00021020
+
+
+#if 0
+  memset(Epiphany.core[1][1].mems.mapped_base, 0, 0x8000);
+
+  const char* str[] = { "S30B00000628E20FE8FFFFFFF0\r\n",
+                        "S3150000062E5CD600278B19F2000B00021052010B014B\r\n" };
+  printf("%p\n", Epiphany.core[1][1].mems.mapped_base);
+
+  parse_srec(str[0], str[0] + strlen(str[0]), (void*)0x84900000, (void*)0x84900000); //Epiphany.core[1][1].mems.mapped_base, Epiphany.core[1][1].mems.mapped_base);
+  parse_srec(str[1], str[1] + strlen(str[1]), (void*) 0x84900000, (void*)0x84900000); //Epiphany.core[1][1].mems.mapped_base, Epiphany.core[1][1].mems.mapped_base);
+  printf("start dumping\n");
+  dump_mem((uint32_t*)0x84900000, 0x8000);
+#endif
 */
 
 
