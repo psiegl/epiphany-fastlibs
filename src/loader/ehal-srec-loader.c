@@ -225,8 +225,8 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
         //  printf("not the same!\n");
       }
 #else
-      uintptr_t eAddr = r | c | (uintptr_t)addr;
-      memcpy((volatile char*)eAddr, buf, srecPairs);
+      char* eAddr = (char*)(r | c | (uintptr_t)addr);
+      memcpy(eAddr, buf, srecPairs);
 #endif
     }
   }
