@@ -27,16 +27,20 @@ eConfig_t ecfg = {
   .esys_regs_base         = (eSysRegs*)0x808f0000,
 
   .num_chips              = 1,
-  .chip[0].eCoreRoot      = (eCoresGMemMap)0x80800000,
-  .chip[0].xyDim          = 4,
-  .chip[0].type           = E16G301,
+  .chip[0]                = {
+    .eCoreRoot              = (eCoresGMemMap)0x80800000,
+    .xyDim                  = 4,
+    .type                   = E16G301,
+  },
   .fd                     = -1,
 
   .num_ext_mems           = 1,
-  .emem[0].base_address   = 0x3e000000,
-  .emem[0].epi_base       = (char*)0x8e000000,
-  .emem[0].size           = 0x02000000,
-  .emem[0].prot           = PROT_READ|PROT_WRITE
+  .emem[0]                = {
+    .base_address           = 0x3e000000,
+    .epi_base               = (char*)0x8e000000,
+    .size                   = 0x02000000,
+    .prot                   = PROT_READ|PROT_WRITE
+  }
 };
 
 

@@ -40,8 +40,11 @@ typedef enum
 // or by employing the esysregs
 //
 // TODO: add hw filedesc.
-typedef struct                      // default values:
-{                                   // ----------------
+typedef struct
+{
+  int fd;                           // file descriptor of EPIPHANY
+                                    // default values:
+                                    // ----------------
                                     // PLATFORM_VERSION   PARALLELLA1601
   eSysRegs* esys_regs_base;         //*                       0x808f0f00  -> 0x808f0000
 
@@ -53,7 +56,6 @@ typedef struct                      // default values:
     eChip_t type;                   //*                                   └> E16G301
   } chip[1];
   /* TODO: ptr to local chip */
-  int fd;                           // file descriptor of EPIPHANY
 
   unsigned num_ext_mems;            //                                 1
                                     // EMEM                     ext-DRAM
