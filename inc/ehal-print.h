@@ -4,6 +4,7 @@
 #ifndef __EHAL_PRINT__H
 #define __EHAL_PRINT__H
 
+#include <stdio.h>
 #include "memmap-epiphany-cores.h"
 
 #define E_ERR 0x1
