@@ -325,8 +325,8 @@ static void init(void)
          "Xilinx Zynq %s (silicon rev. %0.1f)\n"
          "Adapteva %s (%s, rev. %d)\n"
          "\n"
-         "EPIPHANY cores        [%p:%p] [%2d,%2d] to [%2d,%2d]\n"
-         "Zynq <-> EPIPHANY shm [%p:%p] [%2d,%2d] to [%2d,%2d]\n"
+         "EPIPHANY cores        [%p:%p] [(%2d,%2d) → (%2d,%2d)]\n"
+         "Zynq <-> EPIPHANY shm [%p:%p] [(%2d,%2d) → (%2d,%2d)]\n"
          "\n"
          
          "             N                      N,S: connector\n"
