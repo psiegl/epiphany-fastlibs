@@ -4,7 +4,13 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Adapteva EPIPHANY efficient HAL")
 set(CPACK_PACKAGE_VERSION 0.1.0)
 
 set(CMAKE_C_FLAGS "-std=c11 -Ofast -Wall -Wextra")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage -lgcov -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+
+SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -pg")
+SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls -fstack-protector-all")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS} -static-libasan")
+
 
 execute_process(COMMAND uname -m OUTPUT_VARIABLE UNAME_MACHINE)
 if(${UNAME_MACHINE} MATCHES "armv7l")
