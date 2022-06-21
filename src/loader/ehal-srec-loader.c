@@ -14,10 +14,6 @@
 #include "loader/ehal-gen-file-loader.h"
 
 
-#define EMEM_SIZE (0x02000000) // TODO: remove
-
-
-
 #define elemsof( x ) (sizeof(x)/sizeof(x[0]))
 
 
@@ -163,15 +159,14 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
 typedef struct {
   eCoreMemMap_t* eCoreBgn;
   eCoreMemMap_t* eCoreEnd;
+  char* eMemBase;
+  uint32_t eMemSize;
 } eCores;
 
 //int parse_srec(unsigned char *srecBgn, unsigned char *srecEnd,
 //               eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
 int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
 {
-  eCoreMemMap_t* eCoreBgn = ((eCores*)pass)->eCoreBgn;
-  eCoreMemMap_t* eCoreEnd = ((eCores*)pass)->eCoreEnd;
-
   unsigned recCount = 0;
   for( ; srecBgn < srecEnd ; ) {
     unsigned char chksum = 0;
@@ -264,6 +259,9 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
 
         // TODO: One could check in case of writing to eCore, if it hits bank and regs or if it is outside
         //       ECORE_ADDR_LOCAL(addr) < sizeof(((eCoreMemMap_t*)0x0)->bank)
+        eCores* epass = (eCores*)pass;
+        __typeof__(epass->eCoreBgn) eCoreBgn = epass->eCoreBgn;
+        __typeof__(epass->eCoreEnd) eCoreEnd = epass->eCoreEnd;
 
         // 1) local
         if( ! ECORE_ADDR_ROWID(addr)
@@ -278,8 +276,8 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
                  && ECORE_ADDR_COLID(eCoreBgn) <= ECORE_ADDR_COLID(addr)
                  && ECORE_ADDR_COLID(addr) <= ECORE_ADDR_COLID(eCoreEnd))
                 // 2b) eDRAM
-                || (0x8e000000 <= addr // TODO
-                    && addr < (0x8e000000+EMEM_SIZE))) { // TODO
+                || (epass->eMemBase <= (char*)addr
+                    && (char*)addr < (epass->eMemBase+epass->eMemSize))) {
           if(srecPairsToBytes((unsigned char*)addr,
                               srecData, data__srecPairs, &chksum))
             return -1; // One could also just warn that a line is broken
@@ -371,13 +369,17 @@ int handle_srec(unsigned char* srecBgn, unsigned char* srecEnd, void* pass)
   return 0;
 }
 
+// TODO: check if supplied eCoreBgn and eCoreEnd are within the given range
+
 // public API
 int parse_srec(unsigned char *srecBgn, unsigned char *srecEnd,
                eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd)
 {
   eCores data = {
     .eCoreBgn = eCoreBgn,
-    .eCoreEnd = eCoreEnd
+    .eCoreEnd = eCoreEnd,
+    .eMemBase = (char*) 0x8e000000, // TODO: get directly!
+    .eMemSize = 0x2000000           // TODO: get directly!
   };
   return handle_srec(srecBgn, srecEnd, &data);
 }
@@ -392,7 +394,9 @@ int load_srec(const char *srecFile, eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCor
 
   eCores data = {
     .eCoreBgn = eCoreBgn,
-    .eCoreEnd = eCoreEnd
+    .eCoreEnd = eCoreEnd,
+    .eMemBase = (char*) 0x8e000000, // TODO: get directly!
+    .eMemSize = 0x2000000           // TODO: get directly!
   };
   return load_file(srecFile, elemsof(ext), ext, handle_srec, &data);
 }
