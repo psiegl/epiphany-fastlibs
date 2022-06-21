@@ -374,6 +374,7 @@ int handle_hdf(unsigned char* fileBgn, unsigned char* fileEnd, void* pass)
   return 0;
 } 
 
+// TODO: backup with getenv("EPIPHANY_HOME")"/bsps/current/platform.hdf"
 int load_default_hdf(eConfig_t *cfg)
 {
   assert(cfg);
