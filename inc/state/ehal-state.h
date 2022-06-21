@@ -39,32 +39,36 @@ typedef enum
 // /opt/adapteva/esdk/bsps/current/platform.hdf
 // or by employing the esysregs
 //
-// TODO: add hw filedesc.
-typedef struct
-{
-  int fd;                           // file descriptor of EPIPHANY
                                     // default values:
                                     // ----------------
+typedef struct {
+  eCoresGMemMap eCoreRoot;          //* CHIP_ROW                      32  ┬> 0x80800000
+                                    //* CHIP_COL                       8  ┘
+  unsigned xyDim;                   //* CHIP                     E16G301  ┬> 4
+  eChip_t type;                     //*                                   └> E16G301
+} eConfigChip_t;
+
+typedef struct {
+  uintptr_t base_address;           //*                       0x3e000000
+  char* epi_base;                   //*                       0x8e000000
+  uint32_t size;                    //*                       0x02000000
+  int prot;                         //* EMEM_TYPE                   RDWR  -> PROT_READ|PROT_WRITE
+} eConfigMem_t;
+
+typedef struct
+{
+  int fd;                           // -- file descriptor of EPIPHANY
                                     // PLATFORM_VERSION   PARALLELLA1601
   eSysRegs* esys_regs_base;         //*                       0x808f0f00  -> 0x808f0000
 
   unsigned num_chips;               //                                 1
-  struct {
-    eCoresGMemMap eCoreRoot;        //* CHIP_ROW                      32  ┬> 0x80800000
-                                    //* CHIP_COL                       8  ┘
-    unsigned xyDim;                 //* CHIP                     E16G301  ┬> 4
-    eChip_t type;                   //*                                   └> E16G301
-  } chip[1];
-  /* TODO: ptr to local chip */
+  eConfigChip_t chip[1];
+  eConfigChip_t *lchip;
 
   unsigned num_ext_mems;            //                                 1
                                     // EMEM                     ext-DRAM
-  struct {
-    uintptr_t base_address;         //*                       0x3e000000
-    char* epi_base;                 //*                       0x8e000000
-    uint32_t size;                  //*                       0x02000000
-    int prot;                       //* EMEM_TYPE                   RDWR  -> PROT_READ|PROT_WRITE
-  } emem[1];
+  eConfigMem_t emem[1];
+  eConfigMem_t *lemem;
 } eConfig_t;
 
 #endif /* __EHAL_STATE__H */

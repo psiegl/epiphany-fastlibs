@@ -32,6 +32,7 @@ eConfig_t ecfg = {
     .xyDim                  = 4,
     .type                   = E16G301,
   },
+  .lchip                  = &ecfg.chip[0],
   .fd                     = -1,
 
   .num_ext_mems           = 1,
@@ -40,7 +41,8 @@ eConfig_t ecfg = {
     .epi_base               = (char*)0x8e000000,
     .size                   = 0x02000000,
     .prot                   = PROT_READ|PROT_WRITE
-  }
+  },
+  .lemem                  = &ecfg.emem[0]
 };
 
 
