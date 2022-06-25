@@ -14,7 +14,8 @@ typedef enum
 	E16G301 = ((0x10 << 16) | (0x4 << 12) | (0x3 << 8) | 0x1),  // the << 12 is used to not require square()
 	E64G401 = ((0x40 << 16) | (0x8 << 12) | (0x4 << 8) | 0x1)
 } eChip_t;
-#define ECHIP_GET_DIM( x ) ( ((x) >> 12) & 0xF )
+#define ECHIP_GET_ARCH( x )   ( ((x) >> 8) & 0xF )
+#define ECHIP_GET_DIM( x )    ( ((x) >> 12) & 0xF )
 
 typedef enum
 {

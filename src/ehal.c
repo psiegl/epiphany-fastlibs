@@ -33,7 +33,7 @@ eConfig_t ecfg = {
     .type                   = E16G301,
   },
   .lchip                  = &ecfg.chip[0],
-  .fd                     = -1,
+  .fd                     = -1, // Identifier if initialised corrrectly or not.
 
   .num_ext_mems           = 1,
   .emem[0]                = {
@@ -183,6 +183,7 @@ void eCoresFini(eConfig_t *ecfg)
   eSysRegsMunmap(ecfg->esys_regs_base);
 
   close(ecfg->fd);
+  ecfg->fd = -1;
 }
 
 

@@ -134,8 +134,6 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
 #endif
     }
   }
-
-
   return 0;
 }
 
