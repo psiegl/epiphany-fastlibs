@@ -86,6 +86,7 @@ int srecPairsToBytes(unsigned char* bytesOut,
 
 // Count, Data and Checksum bytes are used from pairs
 // (input is formated into host endianness like little endian)
+char buf[0xFF] __attribute__ ((aligned (sizeof(uintptr_t) * 8)));
 int srecPairsToBytes_eCoreLocal(unsigned char* addr,
                                 eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd,
                                 unsigned char *srecPairCharIn, unsigned srecPairs,
@@ -96,7 +97,6 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
   assert(srecPairCharIn);
   assert(chksum);
 
-  char buf[0xFF];
   for(unsigned i = 0; i < srecPairs; ++i) {
     char ret = 0;
     for(unsigned j = 0; j < 2; ++j) {
@@ -120,7 +120,7 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     for(uint32_t c = (((uintptr_t)eCoreEnd) & MASK_COLID);
         c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
 
-#if 0
+#if 1
       unsigned s;
       for(s = 0; s < srecPairs; s++) {
         //*(volatile char*)(r | c | (uintptr_t)&addr[s]) = buf[s];
