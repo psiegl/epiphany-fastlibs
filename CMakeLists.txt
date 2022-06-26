@@ -5,11 +5,14 @@ set(CPACK_PACKAGE_VERSION 0.1.0)
 
 set(CMAKE_C_FLAGS "-std=c11 -Ofast -Wall -Wextra")
 
-SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -pg")
+SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -g -pg")
 SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls -fstack-protector-all")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS} -static-libasan")
+#set(SANITIZE_COMPILE_FLAGS "-fsanitize=address")
+#set(SANITIZE_LINK_FLAGS "-static-libasan")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} ${SANITIZE_COMPILE_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls -fstack-protector-all")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS} ${SANITIZE_LINK_FLAGS}")
 
 
 execute_process(COMMAND uname -m OUTPUT_VARIABLE UNAME_MACHINE)
