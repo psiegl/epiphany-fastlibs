@@ -27,9 +27,6 @@ along with this program, see the file COPYING. If not, see
 //#include <e-hal.h>
 #include "../../inc/ehal-backward-comp.h"
 
-#define _BufSize   (1024)
-#define _BufOffset (0x01000000)
-
 void usage();
 
 int main(int argc, char *argv[])
