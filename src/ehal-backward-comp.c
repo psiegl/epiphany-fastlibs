@@ -417,27 +417,26 @@ int ee_set_core_config_range(e_epiphany_t *pEpiphany,
   backComp.e_emem_config.objtype   = E_EXT_MEM;
   backComp.e_emem_config.base      = cfg->lemem->epi_base/*TODO!!! pEMEM->ephy_base from Alloc*/;
 
-
-  uint32_t MASK_ROWID = 0xFC000000,
-           INCR_ROWID = 0x04000000,
-           MASK_COLID = 0x03F00000,
-           INCR_COLID = 0x00100000;
   eCoreMemMap_t* eCoreRoot = &cfg->lchip->eCoreRoot[0][0];
 
 #if 0
-  for(r = (((uint32_t)eCoreBgn) & MASK_ROWID);
-      r <= (((uint32_t)eCoreEnd) & MASK_ROWID); r += INCR_ROWID) {
-    backComp.e_group_config.core_row = ECORE_ADDR_ROWID( r ) - ECORE_ADDR_ROWID( eCoreRoot );
-    for(c = (((uint32_t)eCoreBgn) & MASK_COLID);
-        c <= (((uint32_t)eCoreEnd) & MASK_COLID); c += INCR_COLID) {
+  for(uintptr_t r = ECORE_MASK_ROWID( eCoreBgn );
+      r <= ECORE_MASK_ROWID( eCoreEnd ); r += ECORE_ONE_ROW) {
+
+    backComp.e_group_config.core_row = ECORE_ADDR_ROWID( (uintptr_t)r - (uintptr_t)eCoreRoot );
+
+    for(uintptr_t c = ECORE_MASK_COLID( eCoreBgn );
+        c <= ECORE_MASK_COLID( eCoreEnd ); c += ECORE_ONE_COL) {
 #else // somehow from back does not work.
-  for(uint32_t r = (((uint32_t)eCoreEnd) & MASK_ROWID);
-      r >= (((uint32_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
-    backComp.e_group_config.core_row = ECORE_ADDR_ROWID( r ) - ECORE_ADDR_ROWID( eCoreRoot );
-    for(uint32_t c = (((uint32_t)eCoreEnd) & MASK_COLID);
-        c >= (((uint32_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
+  for(uintptr_t r = ECORE_MASK_ROWID( eCoreEnd );
+      r >= ECORE_MASK_ROWID( eCoreBgn ); r -= ECORE_ONE_ROW) {
+
+    backComp.e_group_config.core_row = ECORE_ADDR_ROWID( (uintptr_t)r - (uintptr_t)eCoreRoot );
+
+    for(uintptr_t c = ECORE_MASK_COLID( eCoreEnd );
+        c >= ECORE_MASK_COLID( eCoreBgn ); c -= ECORE_ONE_COL) {
 #endif
-	    backComp.e_group_config.core_col = ECORE_ADDR_COLID( c ) - ECORE_ADDR_COLID( eCoreRoot );
+	    backComp.e_group_config.core_col = ECORE_ADDR_COLID( (uintptr_t)c - (uintptr_t)eCoreRoot );
   
       eCoreMemMapSW_t* cur = (eCoreMemMapSW_t*)(r | c);
       //memcpy(&cur->grpcfg, &backComp, sizeof(backComp));
@@ -467,20 +466,16 @@ int e_load_group(char *executable, e_epiphany_t *dev,
   if(start == E_TRUE) {
     int SYNC = (1 << E_SYNC);
 
-    uint32_t MASK_ROWID = 0xFC000000,
-             INCR_ROWID = 0x04000000,
-             MASK_COLID = 0x03F00000,
-             INCR_COLID = 0x00100000;
 #if 1
-    for(uint32_t r = (((uint32_t)eCoreBgn) & MASK_ROWID);
-        r <= (((uint32_t)eCoreEnd) & MASK_ROWID); r += INCR_ROWID) {
-      for(uint32_t c = (((uint32_t)eCoreBgn) & MASK_COLID);
-          c <= (((uint32_t)eCoreEnd) & MASK_COLID); c += INCR_COLID) {
+    for(uintptr_t r = ECORE_MASK_ROWID( eCoreBgn );
+        r <= ECORE_MASK_ROWID( eCoreEnd ); r += ECORE_ONE_ROW) {
+      for(uintptr_t c = ECORE_MASK_COLID( eCoreBgn );
+          c <= ECORE_MASK_COLID( eCoreEnd ); c += ECORE_ONE_COL) {
 #else // somehow from back does not work.
-    for(uint32_t r = (((uint32_t)eCoreEnd) & MASK_ROWID);
-        r >= (((uint32_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
-      for(uint32_t c = (((uint32_t)eCoreEnd) & MASK_COLID);
-          c >= (((uint32_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
+    for(uintptr_t r = ECORE_MASK_ROWID( eCoreEnd );
+        r >= ECORE_MASK_ROWID( eCoreBgn ); r -= ECORE_ONE_ROW) {
+      for(uintptr_t c = ECORE_MASK_COLID( eCoreEnd );
+          c >= ECORE_MASK_COLID( eCoreBgn ); c -= ECORE_ONE_COL) {
 #endif
         eCoreMemMap_t* cur = (eCoreMemMap_t*)(r | c);
         cur->regs.ilatst = SYNC;

@@ -84,9 +84,10 @@ int srecPairsToBytes(unsigned char* bytesOut,
   return 0;
 }
 
+
 // Count, Data and Checksum bytes are used from pairs
 // (input is formated into host endianness like little endian)
-char buf[0xFF] __attribute__ ((aligned (sizeof(uintptr_t) * 8)));
+char buf[0xFF] __attribute__ ((aligned (sizeof(uintptr_t))));
 int srecPairsToBytes_eCoreLocal(unsigned char* addr,
                                 eCoreMemMap_t* eCoreBgn, eCoreMemMap_t* eCoreEnd,
                                 unsigned char *srecPairCharIn, unsigned srecPairs,
@@ -111,26 +112,20 @@ int srecPairsToBytes_eCoreLocal(unsigned char* addr,
     epiphany_arch_ref.pdf, REV 14.03.11 page 27
     eMesh -> Maximum bandwidth is obtained with double word transactions.
 */
-  uint32_t MASK_ROWID = 0xFC000000;
-  uint32_t INCR_ROWID = 0x04000000;
-  uint32_t MASK_COLID = 0x03F00000;
-  uint32_t INCR_COLID = 0x00100000;
-  for(uint32_t r = (((uintptr_t)eCoreEnd) & MASK_ROWID);
-      r >= (((uintptr_t)eCoreBgn) & MASK_ROWID); r -= INCR_ROWID) {
-    for(uint32_t c = (((uintptr_t)eCoreEnd) & MASK_COLID);
-        c >= (((uintptr_t)eCoreBgn) & MASK_COLID); c -= INCR_COLID) {
+  for(uintptr_t r = ECORE_MASK_ROWID( eCoreEnd );
+      r >= ECORE_MASK_ROWID( eCoreBgn ); r -= ECORE_ONE_ROW) {
+    for(uintptr_t c = ECORE_MASK_COLID( eCoreEnd );
+        c >= ECORE_MASK_COLID( eCoreBgn ); c -= ECORE_ONE_COL) {
+
+      eCoreMemMap_t* cur = (eCoreMemMap_t*)(r | c);
+      volatile unsigned char* eaddr = cur->sram + (uintptr_t)addr;
 
 #if 1
       unsigned s;
-      for(s = 0; s < srecPairs; s++) {
-        //*(volatile char*)(r | c | (uintptr_t)&addr[s]) = buf[s];
-        ((volatile char*)(r | c | (uintptr_t)addr))[s] = buf[s];
-        //if((char*)(r | c | (uintptr_t)&addr[s]) != &((char*)(r | c | (uintptr_t)addr))[s])
-        //  printf("not the same!\n");
-      }
+      for(s = 0; s < srecPairs; s++)
+        eaddr[s] = buf[s];
 #else
-      char* eAddr = (char*)(r | c | (uintptr_t)addr);
-      memcpy(eAddr, buf, srecPairs);
+      memcpy(eaddr, buf, srecPairs);
 #endif
     }
   }

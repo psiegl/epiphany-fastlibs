@@ -442,18 +442,23 @@ typedef eCoreMemMap_t         (*eCoresGMemMap)[ECORES_MAX_DIM];
  d = (end - root)/65
  -> add 1, as we want to get the length
 */
-#define ECORE_SQUARE_LEN( BGN, END ) ( ((uintptr_t)(((eCoreMemMap_t*)END)-((eCoreMemMap_t*)BGN))) / 65 + 1 )
+#define ECORE_SQUARE_LEN( BGN, END ) ( ((uintptr_t)(((eCoreMemMap_t*)END)-((eCoreMemMap_t*)BGN))) / (ECORES_MAX_DIM + 1) + 1 )
 
 
 
 #define ECORE_ADDR_ROWMASK  ((ECORES_MAX_DIM-1) << 26)
 #define ECORE_ADDR_COLMASK  ((ECORES_MAX_DIM-1) << 20)
-#define ECORE_ADDR_LCLMASK  ((uintptr_t)0xFFFFF)
+#define ECORE_ADDR_LCLMASK  (((uintptr_t)0x1 << 20) - 1)
 
 // VA: (row, column) local addr
 #define ECORE_ADDR_ROWID( addr ) (( ((uintptr_t)addr) >> 26 ) & (ECORES_MAX_DIM-1))
 #define ECORE_ADDR_COLID( addr ) (( ((uintptr_t)addr) >> 20 ) & (ECORES_MAX_DIM-1))
-#define ECORE_ADDR_LOCAL( addr ) ( ((uintptr_t)addr) & ECORE_ADDR_LCLMASK ).
+
+#define ECORE_MASK_ROWID( addr )  ( ((uintptr_t)addr) & ECORE_ADDR_ROWMASK )
+#define ECORE_ONE_ROW             ( (uintptr_t)0x1 << 26 )
+#define ECORE_MASK_COLID( addr )  ( ((uintptr_t)addr) & ECORE_ADDR_COLMASK )
+#define ECORE_ONE_COL             ( (uintptr_t)0x1 << 20 )
+#define ECORE_ADDR_LOCAL( addr )  ( ((uintptr_t)addr) & ECORE_ADDR_LCLMASK )
 
 
 #endif /* __MEMMAP_EPIPHANY_CORES__PUBLIC_API__H */
