@@ -287,7 +287,7 @@ int e_alloc(e_mem_t *mbuf, off_t offset, size_t size)
 
 	mbuf->base = (void*)(((char*)mbuf->mapped_base) + mbuf->page_offset);
 
-	mbuf->ephy_base = (e_platform.emem[0].ephy_base + offset); // TODO: this takes only the 1st segment into account
+	mbuf->ephy_base = e_platform.emem[0].ephy_base + offset; // TODO: this takes only the 1st segment into account
 	mbuf->emap_size = size;
 
 	return E_OK;
@@ -314,9 +314,9 @@ ssize_t ee_write_esys(off_t to_addr, int data)
 // Write a memory block to SRAM of a core in a group
 ssize_t ee_write_buf(e_epiphany_t *dev, unsigned row, unsigned col, off_t to_addr, const void *buf, size_t size)
 {
-	void *pto = (char*)cfg->lchip->eCoreRoot[row][col].sram + to_addr;
+	volatile unsigned char *pto = cfg->lchip->eCoreRoot[row][col].sram + to_addr;
 	assert(dev->core[row][col].mems.base == cfg->lchip->eCoreRoot[row][col].sram);
-	memcpy(pto, buf, size);
+	memcpy((char*)pto, buf, size);
 
 	return size;
 }
@@ -349,9 +349,9 @@ ssize_t e_write(void *dev, unsigned row, unsigned col, off_t to_addr, const void
 	e_epiphany_t *edev;
 	e_mem_t      *mdev;
 
-	switch (*((e_objtype_t *) dev)) {
+	switch (*(e_objtype_t*) dev) {
 	case E_EPI_GROUP:
-		edev = (e_epiphany_t *) dev;
+		edev = (e_epiphany_t*) dev;
 		if (to_addr < edev->core[row][col].mems.map_size)
 			wcount = ee_write_buf(edev, row, col, to_addr, buf, size);
 		else
@@ -417,27 +417,25 @@ int ee_set_core_config_range(e_epiphany_t *pEpiphany,
   backComp.e_emem_config.objtype   = E_EXT_MEM;
   backComp.e_emem_config.base      = cfg->lemem->epi_base/*TODO!!! pEMEM->ephy_base from Alloc*/;
 
+
   eCoreMemMap_t* eCoreRoot = &cfg->lchip->eCoreRoot[0][0];
 
 #if 0
   for(uintptr_t r = ECORE_MASK_ROWID( eCoreBgn );
       r <= ECORE_MASK_ROWID( eCoreEnd ); r += ECORE_ONE_ROW) {
-
-    backComp.e_group_config.core_row = ECORE_ADDR_ROWID( (uintptr_t)r - (uintptr_t)eCoreRoot );
-
+    backComp.e_group_config.core_row = ECORE_ADDR_ROWID( r ) - ECORE_ADDR_ROWID( eCoreRoot );
     for(uintptr_t c = ECORE_MASK_COLID( eCoreBgn );
         c <= ECORE_MASK_COLID( eCoreEnd ); c += ECORE_ONE_COL) {
 #else // somehow from back does not work.
   for(uintptr_t r = ECORE_MASK_ROWID( eCoreEnd );
       r >= ECORE_MASK_ROWID( eCoreBgn ); r -= ECORE_ONE_ROW) {
-
-    backComp.e_group_config.core_row = ECORE_ADDR_ROWID( (uintptr_t)r - (uintptr_t)eCoreRoot );
+    backComp.e_group_config.core_row = ECORE_ADDR_ROWID( r ) - ECORE_ADDR_ROWID( eCoreRoot );
 
     for(uintptr_t c = ECORE_MASK_COLID( eCoreEnd );
         c >= ECORE_MASK_COLID( eCoreBgn ); c -= ECORE_ONE_COL) {
 #endif
-	    backComp.e_group_config.core_col = ECORE_ADDR_COLID( (uintptr_t)c - (uintptr_t)eCoreRoot );
-  
+	    backComp.e_group_config.core_col = ECORE_ADDR_COLID( c ) - ECORE_ADDR_COLID( eCoreRoot );
+
       eCoreMemMapSW_t* cur = (eCoreMemMapSW_t*)(r | c);
       //memcpy(&cur->grpcfg, &backComp, sizeof(backComp));
       memcpy(&cur->____PADDING[0], &backComp, sizeof(backComp));
