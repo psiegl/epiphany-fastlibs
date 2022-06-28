@@ -9,6 +9,7 @@
 
 #define E_ERR 0x1
 #define E_WRN 0x2
+#define E_INF 0x3
 #define E_DBG 0x4
 
 #ifdef __DEFINE_ELOGLVL

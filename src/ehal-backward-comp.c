@@ -30,68 +30,69 @@ e_platform_t e_platform = {
 
 
 
-
-int ee_set_platform_params(e_platform_t *platform)
+void ee_set_platform_params(e_platform_t *platform)
 {
   struct {
 	  e_platformtype_t type;        // Epiphany platform part number
 	  const char*      version;     // version name of Epiphany chip
   } platform_params_table[] = {
 //   type              version
-	  {E_GENERIC,        "GENERIC"},
-	  {E_EMEK301,        "EMEK301"},
-	  {E_EMEK401,        "EMEK401"},
-	  {E_ZEDBOARD1601,   "ZEDBOARD1601"},
-	  {E_ZEDBOARD6401,   "ZEDBOARD6401"},
 	  {E_PARALLELLA1601, "PARALLELLA1601"},
 	  {E_PARALLELLA6401, "PARALLELLA6401"},
+	  {E_ZEDBOARD1601,   "ZEDBOARD1601"},
+	  {E_ZEDBOARD6401,   "ZEDBOARD6401"},
+	  {E_EMEK301,        "EMEK301"},
+	  {E_EMEK401,        "EMEK401"},
+	  {E_GENERIC,        "GENERIC"},
   };
 
 	for (unsigned v = 0; v < elemsof(platform_params_table); v++)
 		if (!strcmp(platform->version, platform_params_table[v].version)) {
     	platform->type = platform_params_table[v].type;
-			return E_OK;
+			return;
 		}
 
   // Fallback
-	platform->type = platform_params_table[0].type;
+	platform->type = platform_params_table[6].type;
 
-	return E_ERR;
+	printf("WRN: could not identify board! Using fallback.\n");
 }
 
-int ee_set_chip_params(e_chip_t *chip, eConfigChip_t *chipCfg)
+void ee_set_chip_params(e_chip_t *chip, eConfigChip_t *chipCfg)
 {
   struct {
-	  e_chiptype_t	 oldtype;		  // Epiphany chip part number
 	  eChip_t    type;
+	  e_chiptype_t oldtype;		  // Epiphany chip part number
 	  off_t			 ioregs_n;	  // base address of north IO register
 	  off_t			 ioregs_e;	  // base address of east IO register
 	  off_t			 ioregs_s;	  // base address of south IO register
 	  off_t			 ioregs_w;	  // base address of west IO register
   } chip_params_table[] = {
-  // type                io_n        io_e        io_s        io_w
-	  {E_E16G301, E16G301, 0x002f0000, 0x083f0000, 0x0c2f0000, 0x080f0000},
-	  {E_E64G401, E64G401, 0x002f0000, 0x087f0000, 0x1c2f0000, 0x080f0000},
+  //          type       io_n        io_e        io_s        io_w
+	  {E16G301, E_E16G301, 0x002f0000, 0x083f0000, 0x0c2f0000, 0x080f0000},
+	  {E64G401, E_E64G401, 0x002f0000, 0x087f0000, 0x1c2f0000, 0x080f0000},
   };
 
-	unsigned v, ret = E_OK;
+	unsigned v;
 	for (v = 0; v < elemsof(chip_params_table); v++)
 		if(chipCfg->type == chip_params_table[v].type)
 			break;
 
 	if (v == elemsof(chip_params_table)) {
-	  ret = E_ERR;
+	  printf("WRN: could not identify EPIPHANY chip! Using fallback.\n");
 		v = 0;
 	}
+
+  eCoreMemMap_t* eCoreRoot = &chipCfg->eCoreRoot[0][0];
 
 	chip->arch      = ECHIP_GET_ARCH( chipCfg->type );
 	chip->rows      = ECHIP_GET_DIM( chipCfg->type );
 	chip->cols      = ECHIP_GET_DIM( chipCfg->type );
 	chip->num_cores = chip->rows * chip->cols;
-	chip->sram_base = (uintptr_t)chipCfg->eCoreRoot[0][0].sram - (uintptr_t)&chipCfg->eCoreRoot[0][0];
-	chip->sram_size = sizeof(chipCfg->eCoreRoot[0][0].sram);
-	chip->regs_base = (uintptr_t)&chipCfg->eCoreRoot[0][0].regs - (uintptr_t)&chipCfg->eCoreRoot[0][0];
-	chip->regs_size = sizeof(chipCfg->eCoreRoot[0][0].regs);
+	chip->sram_base = (uintptr_t)eCoreRoot->sram - (uintptr_t)eCoreRoot;
+	chip->sram_size = sizeof(eCoreRoot->sram);
+	chip->regs_base = (uintptr_t)&eCoreRoot->regs - (uintptr_t)eCoreRoot;
+	chip->regs_size = sizeof(eCoreRoot->regs);
 
   __typeof__(chip_params_table[0])* cdb = &chip_params_table[v];
 	chip->type      = cdb->oldtype;
@@ -99,8 +100,6 @@ int ee_set_chip_params(e_chip_t *chip, eConfigChip_t *chipCfg)
 	chip->ioregs_e  = cdb->ioregs_e;
 	chip->ioregs_s  = cdb->ioregs_s;
 	chip->ioregs_w  = cdb->ioregs_w;
-
-	return ret;
 }
 
 int e_init(char *hdf)
@@ -111,8 +110,8 @@ int e_init(char *hdf)
      || cfg->fd == -1)
     return E_ERR;
 
-	e_platform.chip = (e_chip_t *) malloc (cfg->num_chips * sizeof(e_chip_t)
-	                                       * cfg->num_ext_mems + sizeof(e_memseg_t));
+	e_platform.chip = (e_chip_t*) malloc (cfg->num_chips * sizeof(e_chip_t)
+	                                      + cfg->num_ext_mems * sizeof(e_memseg_t));
   if(!e_platform.chip)
     return E_ERR;
 
@@ -190,6 +189,12 @@ int e_open(e_epiphany_t *dev, unsigned row, unsigned col, unsigned rows, unsigne
 		return E_ERR;
 	}
 
+	// TODO: check row, col, rows, cols
+	if (!dev) {
+		fprintf(stderr, "ERROR: Can't connect to Epiphany or external memory.\n");
+		return E_ERR;
+	}
+
 	// Map individual cores to virtual memory space
 	dev->core = (e_core_t**) malloc (rows * (sizeof(e_core_t*)
                                            + cols * sizeof(e_core_t)));
@@ -198,46 +203,50 @@ int e_open(e_epiphany_t *dev, unsigned row, unsigned col, unsigned rows, unsigne
 		return E_ERR;
 	}
 
+
+	eCoreMemMap_t* eCoreRoot = &cfg->lchip->eCoreRoot[0][0];
+
 	dev->objtype = E_EPI_GROUP;
 	dev->type	 = e_platform.chip[0].type; 
 
 	// Set device geometry
 	// TODO: check if coordinates and size are legal.
 	dev->memfd   = -1;
-	dev->row		 = row + ECORE_ADDR_ROWID( &cfg->lchip->eCoreRoot[0][0] );
-	dev->col		 = col + ECORE_ADDR_COLID( &cfg->lchip->eCoreRoot[0][0] );
+	dev->row		 = row + ECORE_ADDR_ROWID( eCoreRoot );
+	dev->col		 = col + ECORE_ADDR_COLID( eCoreRoot );
 	dev->rows		 = rows;
 	dev->cols		 = cols;
 	dev->num_cores	 = rows * cols;
-	dev->base_coreid = ECORE_ADDR_ROWCOLID( &cfg->lchip->eCoreRoot[0][0] );
+	dev->base_coreid = ECORE_ADDR_ROWCOLID( eCoreRoot );
 
 	for (unsigned irow=0; irow<rows; irow++) {
 		dev->core[irow] = &((e_core_t*)&dev->core[rows])[cols * irow];
 		for (unsigned icol=0; icol<cols; icol++) {
 			e_core_t *curr_core = &dev->core[irow][icol];
+      eCoreMemMap_t* eCoreCur = &cfg->lchip->eCoreRoot[irow][icol];
 
 			curr_core->objtype = E_EPI_CORE;
 			curr_core->row = irow;
 			curr_core->col = icol;
-			curr_core->id  = ECORE_ADDR_ROWCOLID( &cfg->lchip->eCoreRoot[irow][icol] );
+			curr_core->id  = ECORE_ADDR_ROWCOLID( eCoreCur );
 
 			// e-core regs
 			curr_core->regs.objtype = E_NULL;
-			curr_core->regs.map_size = sizeof(cfg->lchip->eCoreRoot[irow][icol].regs);
+			curr_core->regs.map_size = sizeof(eCoreCur->regs);
 			curr_core->regs.page_offset = 0;
 			curr_core->regs.base =
 			  curr_core->regs.mapped_base =
 			    curr_core->regs.page_base =
-			      curr_core->regs.phy_base = (uintptr_t)&cfg->lchip->eCoreRoot[irow][icol].regs; 
+			      curr_core->regs.phy_base = (uintptr_t)&eCoreCur->regs; 
 
 			// SRAM array
 			curr_core->mems.objtype = E_NULL;
-			curr_core->mems.map_size = sizeof(cfg->lchip->eCoreRoot[irow][icol].sram);
+			curr_core->mems.map_size = sizeof(eCoreCur->sram);
 			curr_core->mems.page_offset = 0;
 			curr_core->mems.base =
 			  curr_core->mems.mapped_base =
 			    curr_core->mems.page_base =
-            curr_core->mems.phy_base = (uintptr_t)&cfg->lchip->eCoreRoot[irow][icol].sram[0];
+            curr_core->mems.phy_base = (uintptr_t)&eCoreCur->sram[0];
 		}
 	}
 
@@ -248,7 +257,7 @@ int e_open(e_epiphany_t *dev, unsigned row, unsigned col, unsigned rows, unsigne
 int e_close(e_epiphany_t *dev)
 {
 	if (!dev) {
-		fprintf(stderr, "e_close(): Core group was not opened!\n");
+		fprintf(stderr, "ERROR: Can't connect to Epiphany or external memory.\n");
 		return E_ERR;
 	}
 
@@ -374,6 +383,11 @@ ssize_t e_write(void *dev, unsigned row, unsigned col, off_t to_addr, const void
 
 int e_reset_system(e_epiphany_t *dev)
 {
+	if (!dev) {
+		fprintf(stderr, "ERROR: Can't connect to Epiphany or external memory.\n");
+		return E_ERR;
+	}
+
 //	printf("Writing 0 to E_SYS_RESET:\n");
 	ee_write_esys(/* E_SYS_RESET =  E_SYS_REG_BASE + 0x0004, E_SYS_REG_BASE  = 0x00000000 */0x4, 0); // 0x4
 	usleep(200000);
@@ -450,8 +464,9 @@ int e_load_group(char *executable, e_epiphany_t *dev,
                  unsigned rows, unsigned cols,
                  e_bool_t start)
 {
-	if (!dev) {
-		fprintf(stderr, "ERROR: Can't connect to Epiphany or external memory.\n");
+	if (!dev
+	    || !executable) {
+		fprintf(stderr, "ERROR: Can't connect to Epiphany or external memory or no executable.\n");
 		return E_ERR;
 	}
 
@@ -493,7 +508,10 @@ int e_get_platform_info(e_platform_t *platform)
 		return E_ERR;
 	}
 
-	*platform = e_platform;
+	if(!platform)
+	  return E_ERR;
+
+	memcpy( platform, &e_platform, sizeof(e_platform_t) );
 	platform->chip = NULL;
 	platform->emem = NULL;
 

@@ -322,7 +322,7 @@ static void init(void)
   eCoreMemMap_t* eCoreBgn = &ecfg.chip[0].eCoreRoot[0][0];
   eCoreMemMap_t* eCoreEnd = &ecfg.chip[0].eCoreRoot[ecfg.chip[0].xyDim-1][ecfg.chip[0].xyDim-1];
   __typeof__(&ecfg.emem[0]) emem = &ecfg.emem[0];
-  printf("\n"
+  eCoresPrintf(E_INF, "\n"
          "© BSD-2-Clause 2022 Dr.-Ing. Patrick Siegl\n"
          "\n"
          "Xilinx Zynq %s (silicon rev. %0.1f)\n"
