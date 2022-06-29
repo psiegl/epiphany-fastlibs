@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include "memmap-epiphany-cores.h"
 #include "memmap-epiphany-system.h"
+#define ONLY_MSPACES 1 // only use mspace from dl malloc
+#include "../extern/dl_malloc.h"
 
 typedef enum
 {
@@ -54,6 +56,8 @@ typedef struct {
   char* epi_base;                   //*                       0x8e000000
   uint32_t size;                    //*                       0x02000000
   int prot;                         //* EMEM_TYPE                   RDWR  -> PROT_READ|PROT_WRITE
+
+  mspace space;
 } eConfigMem_t;
 
 typedef struct

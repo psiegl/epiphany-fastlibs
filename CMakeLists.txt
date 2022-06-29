@@ -3,7 +3,7 @@ project( ehal )
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Adapteva EPIPHANY efficient HAL")
 set(CPACK_PACKAGE_VERSION 0.1.0)
 
-set(CMAKE_C_FLAGS "-std=c11 -Ofast -Wall -Wextra")
+set(CMAKE_C_FLAGS "-std=c11 -Ofast -Wall -Wextra -DONLY_MSPACES=1")
 
 SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -g -pg")
 SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
@@ -28,6 +28,7 @@ set(SOURCE
 	src/loader/ehal-srec-loader.c
 	src/ehal-mmap.c
 	src/ehal.c
+	extern/dl_malloc.c
 )
 
 set(HEADER

@@ -155,9 +155,18 @@ int eCoresBootstrap(eConfig_t *ecfg)
       eCoresPrintf(E_DBG, "Zynq <-> EPIPHANY: Enabled EAST eLink\n");
 
       if(!eShmMmap(ecfg->fd, &ecfg->emem[0])) {
-        return 0;
-
-        //eShmMunmap(&ecfg->emem[0]);
+      
+        ecfg->emem[0].space = create_mspace_with_base(ecfg->emem[0].epi_base,
+                                                      ecfg->emem[0].size, 1);
+        if(ecfg->emem[0].space != 0
+           && mspace_set_footprint_limit(ecfg->emem[0].space,
+                                         ecfg->emem[0].size) == ecfg->emem[0].size) {
+          return 0;
+          
+          // destroy_mspace(ecfg->emem[0].space)
+        }
+      
+        eShmMunmap(&ecfg->emem[0]);
       }
 
       eCoreMunmap(eCoreBgn, eCoreEnd);
@@ -173,6 +182,7 @@ int eCoresBootstrap(eConfig_t *ecfg)
 
 void eCoresFini(eConfig_t *ecfg)
 {
+  destroy_mspace(ecfg->emem[0].space);
   eShmMunmap(&ecfg->emem[0]);
 
   __typeof__(&ecfg->chip[0]) chip = &ecfg->chip[0];
