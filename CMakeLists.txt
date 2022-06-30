@@ -46,17 +46,18 @@ if(EHAL_BACKWARD_COMPATIBILITY)
   # To provide backwards compatibility, get official header files
   # Keeps polusion of these header files to one C-file.
 
-	include_directories(${CMAKE_BINARY_DIR}/extern/e-hal/inc/) # required for tests, try to remove!
-	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/extern/e-hal/inc/)
+	set(LIB_E_HAL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/extern/e-hal/inc/)
+
+	file(MAKE_DIRECTORY ${LIB_E_HAL_INCLUDE_DIR})
 	file(DOWNLOAD https://raw.githubusercontent.com/adapteva/epiphany-libs/2019.1/e-hal/src/epiphany-hal-data-local.h ${CMAKE_BINARY_DIR}/extern/e-hal/inc/epiphany-hal-data-local.h)
 	file(DOWNLOAD https://raw.githubusercontent.com/adapteva/epiphany-libs/2019.1/e-hal/src/epiphany-hal-data.h ${CMAKE_BINARY_DIR}/extern/e-hal/inc/epiphany-hal-data.h)
 
 	# EPIPHANY E-HAL API (Backwards compatibility)
 	add_library(e-hal SHARED src/ehal-backward-comp.c)
 	target_link_libraries(e-hal ehal)
-	target_include_directories(e-hal PUBLIC ${CMAKE_BINARY_DIR}/extern/e-hal/inc/)
+	target_include_directories(e-hal PRIVATE ${LIB_E_HAL_INCLUDE_DIR})
 	set_target_properties(e-hal PROPERTIES
-		PUBLIC_HEADER "extern/e-hal/inc/epiphany-hal-data-local.h;extern/e-hal/inc/epiphany-hal-data.h"
+		PUBLIC_HEADER "${LIB_E_HAL_INCLUDE_DIR}/epiphany-hal-data-local.h;${LIB_E_HAL_INCLUDE_DIR}/epiphany-hal-data.h;inc/e-hal.h"
 	)
 endif(EHAL_BACKWARD_COMPATIBILITY)
 

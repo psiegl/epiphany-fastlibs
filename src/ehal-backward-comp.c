@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#include "ehal-backward-comp.h"
+#include "e-hal.h"
 #include "loader/ehal-srec-loader.h"
 #include "state/ehal-state.h"
 
@@ -299,13 +299,18 @@ int e_alloc(e_mem_t *mbuf, off_t offset, size_t size)
 	mbuf->ephy_base = e_platform.emem[0].ephy_base + offset; // TODO: this takes only the 1st segment into account
 	mbuf->emap_size = size;
 
+
+// HACK for now
+  mbuf->base = mspace_malloc(cfg->lemem->space, size);
+  printf("--- %p\n", mbuf->base );
+
 	return E_OK;
 }
 
 // Free a memory buffer in external memory
 int e_free(e_mem_t *mbuf)
 {
-  (void)mbuf;
+  mspace_free(cfg->lemem->space, mbuf->base);
 	return E_OK;
 }
 

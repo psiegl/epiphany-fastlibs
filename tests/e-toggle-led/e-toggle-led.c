@@ -24,8 +24,7 @@ along with this program, see the file COPYING. If not, see
 #include <string.h>
 #include <unistd.h>
 
-//#include <e-hal.h>
-#include "../../inc/ehal-backward-comp.h"
+#include <e-hal.h>
 
 void usage();
 

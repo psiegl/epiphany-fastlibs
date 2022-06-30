@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 // SPDX-FileCopyrightText:  2022 Patrick Siegl <code@siegl.it>
 
-#ifndef __EHAL_BACKWARD_COMP__H
-#define __EHAL_BACKWARD_COMP__H
+#ifndef __E_HAL__H
+#define __E_HAL__H
 
-#include "epiphany-hal-data.h"
-#include "epiphany-hal-data-local.h"
+#include <epiphany-hal-data.h>
+#include <epiphany-hal-data-local.h>
 
 int e_init(char *hdf);
 int e_finalize();
@@ -33,4 +33,4 @@ int e_load_group(char *executable, e_epiphany_t *dev,
 
 int e_get_platform_info(e_platform_t *platform);
 
-#endif /* __EHAL_BACKWARD_COMP__H */
+#endif /* __E_HAL__H */
