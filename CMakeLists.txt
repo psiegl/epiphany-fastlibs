@@ -23,7 +23,8 @@ if(${UNAME_MACHINE} MATCHES "armv7l")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv7-a")
 endif()
 
-set(SOURCE
+
+add_library(ehal SHARED
 	src/state/ident-adapteva-epiphany.c
 	src/state/ident-xilinx-zynq.c
 	src/loader/ehal-gen-file-loader.c
@@ -36,10 +37,20 @@ set(SOURCE
 	# -> CC0 1.0 (inbound) can be part of BSD-2-Clause (outbound) build
 	extern/dl_malloc.c
 )
-
-set(HEADER
-	${CMAKE_CURRENT_SOURCE_DIR}/inc
+include_directories(
+	inc/
 )
+set_target_properties(ehal PROPERTIES
+	PUBLIC_HEADER "inc/memmap-epiphany-cores.h;inc/loader/ehal_srec_loader.h"
+)
+#set_target_properties(ehal PROPERTIES VERSION ${PROJECT_VERSION})
+
+install(TARGETS ehal
+	LIBRARY DESTINATION /usr/lib
+	PUBLIC_HEADER DESTINATION /usr/include
+)
+#install(FILES inc/ehal.h DESTINATION include)
+
 
 option(EHAL_BACKWARD_COMPATIBILITY ON)
 if(EHAL_BACKWARD_COMPATIBILITY)
@@ -60,22 +71,6 @@ if(EHAL_BACKWARD_COMPATIBILITY)
 		PUBLIC_HEADER "${LIB_E_HAL_INCLUDE_DIR}/epiphany-hal-data-local.h;${LIB_E_HAL_INCLUDE_DIR}/epiphany-hal-data.h;inc/e-hal.h"
 	)
 endif(EHAL_BACKWARD_COMPATIBILITY)
-
-
-include_directories(${HEADER})
-add_library(ehal SHARED ${SOURCE})
-
-set_target_properties(ehal PROPERTIES
-	PUBLIC_HEADER "inc/memmap-epiphany-cores.h;inc/loader/ehal_srec_loader.h"
-)
-#set_target_properties(ehal PROPERTIES VERSION ${PROJECT_VERSION})
-
-
-install(TARGETS ehal
-	LIBRARY DESTINATION /usr/lib
-	PUBLIC_HEADER DESTINATION /usr/include
-)
-#install(FILES inc/ehal.h DESTINATION include)
 
 
 include(CTest)
