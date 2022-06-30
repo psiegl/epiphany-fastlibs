@@ -27,7 +27,8 @@ int e_load_group(char *executable, e_epiphany_t *dev,
                  unsigned row, unsigned col,
                  unsigned rows, unsigned cols,
                  e_bool_t start);
-#define e_load( executable, dev, row, col, start ) e_load_group( executable, dev, row, col, 1, 1, start )
+#define e_load( executable, dev, row, col, start ) \
+        e_load_group( (executable), (dev), (row), (col), 1, 1, (start) )
 
 #define e_set_host_verbosity( lvl ) {}
 
