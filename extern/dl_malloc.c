@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: CC0-1.0
+// SPDX-FileCopyrightText:  2012 Doug Lea <dl@cs.oswego.edu>
 /*
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain, as explained at
