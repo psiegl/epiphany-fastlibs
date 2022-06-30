@@ -154,19 +154,19 @@ int eCoresBootstrap(eConfig_t *ecfg)
       eEastLinkUp(&esysregs->esysconfig.reg, chip->eCoreRoot, chip->type); // FIXME
       eCoresPrintf(E_DBG, "Zynq <-> EPIPHANY: Enabled EAST eLink\n");
 
-      if(!eShmMmap(ecfg->fd, &ecfg->emem[0])) {
+      __typeof__(&ecfg->emem[0]) cemem = &ecfg->emem[0];
+      if(!eShmMmap(ecfg->fd, cemem)) {
       
-        ecfg->emem[0].space = create_mspace_with_base(ecfg->emem[0].epi_base,
-                                                      ecfg->emem[0].size, 1);
-        if(ecfg->emem[0].space != 0
-           && mspace_set_footprint_limit(ecfg->emem[0].space,
-                                         ecfg->emem[0].size) == ecfg->emem[0].size) {
-          return 0;
+        cemem->space = create_mspace_with_base(cemem->epi_base,
+                                               cemem->size, 1);
+        if(cemem->space != 0) {
+          if(mspace_set_footprint_limit(cemem->space, cemem->size) == cemem->size)
+            return 0;
           
-          // destroy_mspace(ecfg->emem[0].space)
+          destroy_mspace(cemem->space);
         }
       
-        eShmMunmap(&ecfg->emem[0]);
+        eShmMunmap(cemem);
       }
 
       eCoreMunmap(eCoreBgn, eCoreEnd);
