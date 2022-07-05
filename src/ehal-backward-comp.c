@@ -63,14 +63,10 @@ void ee_set_chip_params(e_chip_t *chip, eConfigChip_t *chipCfg)
   struct {
 	  eChip_t    type;
 	  e_chiptype_t oldtype;		  // Epiphany chip part number
-	  off_t			 ioregs_n;	  // base address of north IO register
-	  off_t			 ioregs_e;	  // base address of east IO register
-	  off_t			 ioregs_s;	  // base address of south IO register
-	  off_t			 ioregs_w;	  // base address of west IO register
   } chip_params_table[] = {
-  //          type       io_n        io_e        io_s        io_w
-	  {E16G301, E_E16G301, 0x002f0000, 0x083f0000, 0x0c2f0000, 0x080f0000},
-	  {E64G401, E_E64G401, 0x002f0000, 0x087f0000, 0x1c2f0000, 0x080f0000},
+  //          type
+	  {E16G301, E_E16G301},
+	  {E64G401, E_E64G401},
   };
 
 	unsigned v;
@@ -96,10 +92,10 @@ void ee_set_chip_params(e_chip_t *chip, eConfigChip_t *chipCfg)
 
   __typeof__(chip_params_table[0])* cdb = &chip_params_table[v];
 	chip->type      = cdb->oldtype;
-	chip->ioregs_n  = cdb->ioregs_n;
-	chip->ioregs_e  = cdb->ioregs_e;
-	chip->ioregs_s  = cdb->ioregs_s;
-	chip->ioregs_w  = cdb->ioregs_w;
+	chip->ioregs_n  = (uintptr_t)chipCfg->eCoreCfg[ ELINK_REG_NORTH ] - (uintptr_t)eCoreRoot;
+	chip->ioregs_e  = (uintptr_t)chipCfg->eCoreCfg[ ELINK_REG_EAST ] - (uintptr_t)eCoreRoot;
+	chip->ioregs_s  = (uintptr_t)chipCfg->eCoreCfg[ ELINK_REG_SOUTH ] - (uintptr_t)eCoreRoot;
+	chip->ioregs_w  = (uintptr_t)chipCfg->eCoreCfg[ ELINK_REG_WEST ] - (uintptr_t)eCoreRoot;
 }
 
 int e_init(char *hdf)

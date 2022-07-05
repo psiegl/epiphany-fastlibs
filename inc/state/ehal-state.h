@@ -49,6 +49,7 @@ typedef struct {
                                     //* CHIP_COL                       8  ┘
   unsigned xyDim;                   //* CHIP                     E16G301  ┬> 4
   eChip_t type;                     //*                                   └> E16G301
+  eCoreMemMap_t *eCoreCfg[4];       //*                                   └> North, East, South, West
 } eConfigChip_t;
 
 typedef struct {

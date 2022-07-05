@@ -106,6 +106,17 @@ int eCoresBootstrap(eConfig_t *ecfg)
 //    return -1;
 //  }
 
+/*
+  //          io_n        io_e        io_s        io_w
+	  {E16G301, 0x002f0000, 0x083f0000, 0x0c2f0000, 0x080f0000},
+	  {E64G401, 0x002f0000, 0x087f0000, 0x1c2f0000, 0x080f0000},
+*/
+  ecfg->lchip->eCoreCfg[ ELINK_REG_NORTH ] = &ecfg->lchip->eCoreRoot[0][2];
+  ecfg->lchip->eCoreCfg[ ELINK_REG_EAST ] = &ecfg->lchip->eCoreRoot[2][ ecfg->lchip->type == E16G301 ? 3 : 7 ];
+  ecfg->lchip->eCoreCfg[ ELINK_REG_SOUTH ] = &ecfg->lchip->eCoreRoot[ ecfg->lchip->type == E16G301 ? 3 : 7 ][2];
+  ecfg->lchip->eCoreCfg[ ELINK_REG_WEST ] = &ecfg->lchip->eCoreRoot[2][ ecfg->lchip->type == E16G301 ? 0 : 4 ];
+
+
   eCoresPrintf(E_DBG, "Opening EPIPHANY.\n" );
   struct { int err; const char* dev; } edev[] = {
     { -1, "/dev/epiphany/mesh0" },
@@ -376,46 +387,7 @@ static void fini(void)
   eCoresFini(&ecfg);
 }
 
-/*
- * low power mode
 
-  epiphany-examples (2016.11)/io/link_lowpower_mode/src/e_link_lowpower_mode.c
-
-  //North-Link
-  // ELINK_REG_MASK( ELINK_REG_NORTH ) << 12
-  e_reg_write(E_REG_CONFIG, (unsigned) 0x00001000); [15:12] -> CONFIG
-
-  addr=(unsigned *) (0x80AF0308);    // [32,10]
-  (*(addr)) = 0x00000FFF;
-  addr=(unsigned *) (0x80AF0304);    // [32,10]
-  (*(addr)) = 0x00000FFF;
-
-  e_reg_write(E_REG_CONFIG, (unsigned) 0x00400000); // LPMODE=aggressive power down
-
-  /////////////////////////////////////////////////
-  //South-Link
-  // ELINK_REG_MASK( ELINK_REG_SOUTH ) << 12
-  e_reg_write(E_REG_CONFIG, (unsigned) 0x00009000);
-
-  addr=(unsigned *) (0x8CAF0308);   // [35,10]
-  (*(addr)) = 0x00000FFF;
-  addr=(unsigned *) (0x8CAF0304);   // [35,10]
-  (*(addr)) = 0x00000FFF;
-
-  e_reg_write(E_REG_CONFIG, (unsigned) 0x00400000);
-  
-  /////////////////////////////////////////////////
-  //West-Link
-  // ELINK_REG_MASK( ELINK_REG_WEST ) << 12
-  e_reg_write(E_REG_CONFIG, (unsigned) 0x0000d000);
-
-  addr=(unsigned *) (0x888F0308);   // [34, 8]
-  (*(addr)) = 0x00000FFF;
-  addr=(unsigned *) (0x888F0304);   // [34, 8]
-  (*(addr)) = 0x00000FFF;
-
-  e_reg_write(E_REG_CONFIG, (unsigned) 0x00400000);
-*/
 /*
  * Performance hints:
  * 
